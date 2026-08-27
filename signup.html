@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111">
+<title>Join · seek+scale.</title><link rel="stylesheet" href="assets/app.css">
+</head><body>
+<div class="login-wrap">
+  <div class="login-logo">seek<i>+</i><br>scale.</div>
+  <p class="login-tag">Use your invite to create your member account.</p>
+  <div id="configWarning"></div>
+  <div id="form">
+    <div class="field"><label for="code">Invite code</label><input id="code" placeholder="SS-XXXXXXXX" autocapitalize="characters"></div>
+    <div class="field"><label for="name">Your name</label><input id="name" autocomplete="name" placeholder="Jared Thompson"></div>
+    <div class="field"><label for="biz">Business name</label><input id="biz" autocomplete="organization" placeholder="JLT Plumbing LLC"></div>
+    <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="you@yourshop.com"></div>
+    <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+    <button class="btn wide" id="go">Create my account</button>
+    <p class="tiny" id="msg" style="margin-top:16px;text-align:center"></p>
+    <p class="tiny" style="text-align:center;margin-top:22px">Already have an account? <a class="linkish" href="index.html">Sign in</a></p>
+  </div>
+  <div id="confirm" hidden>
+    <div class="card flat" style="text-align:center">
+      <div style="font-size:19px;font-weight:800">Check your email.</div>
+      <p class="tiny">Supabase needs you to confirm your email. After you confirm, come back and sign in. Your invite code is saved on this device.</p>
+      <a class="btn wide" href="index.html">Go to sign in</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+(function(){
+  initSupabase(); if(configMessage(document.getElementById('configWarning'))){document.getElementById('go').disabled=true;return;}
+  var pre=qs('invite');if(pre)document.getElementById('code').value=pre;
+  function say(t,bad){var m=document.getElementById('msg');m.textContent=t;m.style.color=bad?'#B4302A':'var(--muted)';}
+  document.getElementById('go').onclick=async function(){
+    var btn=this,code=document.getElementById('code').value.trim(),name=document.getElementById('name').value.trim(),biz=document.getElementById('biz').value.trim(),em=document.getElementById('em').value.trim(),pw=document.getElementById('pw').value;
+    if(!code)return say('You need an invite code.',true);if(!name||!em||!pw)return say('Name, email and password are required.',true);if(pw.length<8)return say('Use at least 8 characters for your password.',true);
+    btn.disabled=true;say('Checking your invite…');
+    var val=await sb.rpc('validate_invite',{p_code:code,p_email:em});
+    if(val.error||!val.data||!val.data.ok){btn.disabled=false;return say((val.data&&val.data.error)||(val.error&&val.error.message)||'That invite is not valid.',true);}
+    localStorage.setItem('ss_pending_invite',code);
+    say('Creating your account…');
+    var redirect=location.origin+location.pathname.replace(/signup\.html.*$/,'index.html');
+    var s=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:redirect,data:{full_name:name,business_name:biz}}});
+    if(s.error){btn.disabled=false;if(/already|registered/i.test(s.error.message)){say('That email already has an account. Sign in and use this invite code.',true);}else say(s.error.message,true);return;}
+    if(!s.data.session){document.getElementById('form').hidden=true;document.getElementById('confirm').hidden=false;return;}
+    var r=await sb.rpc('redeem_invite',{p_code:code});btn.disabled=false;
+    if(r.error||!r.data||!r.data.ok)return say((r.data&&r.data.error)||(r.error&&r.error.message)||'Account made, but the invite could not be redeemed.',true);
+    localStorage.removeItem('ss_pending_invite'); location.replace('home.html');
+  };
+  document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+})();
+</script></body></html>

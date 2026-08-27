@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · seek+scale.</title>
+<link rel="stylesheet" href="../assets/app.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ===================== LOGIN GATE ===================== -->
+<div id="gate" class="login-wrap">
+  <div class="login-logo">seek<i>+</i><br>scale.</div>
+  <p class="login-tag">Admin</p>
+
+  <div class="field"><label for="em">Email</label>
+    <input id="em" type="email" autocomplete="username" placeholder="ryan@seekandscale.com"></div>
+  <div class="field"><label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
+
+  <button class="btn wide" id="signIn" style="margin-top:8px">Sign in</button>
+  <button class="btn wide ghost" id="magic" style="margin-top:10px">Email me a link instead</button>
+  <p class="tiny" id="gateMsg" style="margin-top:16px;text-align:center"></p>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="logo">seek<i>+</i><br>scale.</div>
+    <div class="top-right">
+      <div class="whoami"><span class="nm" id="meName">&mdash;</span><span class="bz">Admin</span></div>
+      <button class="pill" id="signOut">Sign out</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="side" id="side"></nav>
+    <main>
+      <div id="banner"></div>
+
+      <!-- ---------- OVERVIEW ---------- -->
+      <section class="sect on" id="s-overview">
+        <h1>Overview</h1>
+        <p class="sub" id="today"></p>
+        <div class="stats" id="stats"></div>
+
+        <h2>Waiting on you</h2>
+        <div class="card" id="pendingBox"></div>
+      </section>
+
+      <!-- ---------- GENERIC CRUD SECTIONS ---------- -->
+      <section class="sect" id="s-businesses"></section>
+      <section class="sect" id="s-posts"></section>
+      <section class="sect" id="s-events"></section>
+      <section class="sect" id="s-listings"></section>
+
+      <!-- ---------- HELP REQUESTS ---------- -->
+      <section class="sect" id="s-help">
+        <h1>Help Desk</h1>
+        <p class="sub">Private requests sent from the member Help Desk.</p>
+        <div class="toolbar">
+          <input class="search" id="helpSearch" placeholder="Search name, business, subject…">
+          <select class="sel" id="helpStatus">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="working">Working</option>
+            <option value="done">Done</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div id="helpList"></div>
+      </section>
+
+      <!-- ---------- MEMBERS ---------- -->
+      <section class="sect" id="s-members">
+        <h1>Members</h1>
+        <p class="sub">Approve, suspend, or promote. Suspended members keep their row.</p>
+        <div class="toolbar">
+          <input class="search" id="memberSearch" placeholder="Search name, email, business&hellip;">
+          <select class="sel" id="memberStatus">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <div id="memberList"></div>
+      </section>
+
+      <!-- ---------- INVITES ---------- -->
+      <section class="sect" id="s-invites">
+        <h1>Invites</h1>
+        <p class="sub">Codes are made on the server. Nothing here can be faked from a browser.</p>
+
+        <div class="card">
+          <div class="eyebrow">Make invites</div>
+          <div class="grid2" style="margin-top:12px">
+            <div class="field"><label for="ivLabel">Label (for you)</label>
+              <input id="ivLabel" placeholder="Paid Aug 26 &mdash; Jared"></div>
+            <div class="field"><label for="ivEmail">Lock to email (optional)</label>
+              <input id="ivEmail" type="email" placeholder="leave blank for anyone"></div>
+            <div class="field"><label for="ivUses">Uses per code</label>
+              <input id="ivUses" type="number" min="1" value="1"></div>
+            <div class="field"><label for="ivCount">How many codes</label>
+              <input id="ivCount" type="number" min="1" max="50" value="1"></div>
+            <div class="field"><label for="ivExp">Expires (optional)</label>
+              <input id="ivExp" type="date"></div>
+          </div>
+          <button class="btn wide" id="mkInvite" style="margin-top:6px">Create</button>
+        </div>
+
+        <div class="toolbar">
+          <input class="search" id="inviteSearch" placeholder="Search code or label&hellip;">
+          <select class="sel" id="inviteState">
+            <option value="">All</option>
+            <option value="live">Usable</option>
+            <option value="used">Used up</option>
+            <option value="revoked">Turned off</option>
+          </select>
+        </div>
+        <div id="inviteList"></div>
+      </section>
+
+      <!-- ---------- PAYMENTS ---------- -->
+      <section class="sect" id="s-payments">
+        <h1>Payments</h1>
+        <p class="sub">Every Stripe payment, and the invite it produced.</p>
+        <div class="toolbar"><input class="search" id="paySearch" placeholder="Search email&hellip;"></div>
+        <div id="payList"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ===================== EDIT DRAWER ===================== -->
+<div id="scrim"></div>
+<div id="drawer" role="dialog" aria-modal="true" aria-label="Edit">
+  <div class="grab"></div>
+  <div class="dhead"><h2 id="dTitle" style="margin:0">Edit</h2>
+    <button class="pill" id="dClose">Close</button></div>
+  <div id="dBody"></div>
+  <div class="dfoot">
+    <button class="act soft" id="dDelete">Delete</button>
+    <button class="btn" id="dSave" style="margin-left:auto">Save</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../assets/config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

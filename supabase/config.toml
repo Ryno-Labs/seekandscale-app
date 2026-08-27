@@ -1,0 +1,7 @@
+project_id = "seek-scale"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.get-invite]
+verify_jwt = false

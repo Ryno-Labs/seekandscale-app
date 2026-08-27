@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111">
+<title>seek+scale. — Austin service business owners</title><link rel="stylesheet" href="assets/app.css"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
+<div style="max-width:660px;margin:0 auto;padding:0 18px 60px">
+  <div style="display:flex;align-items:center;padding:16px 0"><div class="logo">seek<i>+</i><br>scale.</div><a class="pill" style="margin-left:auto" href="index.html">Sign in</a></div>
+  <div class="hero"><h1>A business resource community for Austin service business owners.</h1><p class="sub" style="font-size:17px;margin-top:14px">Verified local businesses, a forum that stays useful, and a help desk for the work that keeps getting pushed back.</p></div>
+  <div class="spots"><div class="big tnum">37</div><div class="lb">founding spots left of 100</div><div class="track"><i style="width:63%"></i></div><div class="lb" style="margin-top:12px">Austin area only. Then we close the founding group.</div></div>
+  <div class="card"><div class="eyebrow">Founding price</div><div class="price"><span class="p tnum">$81</span><span class="u">a month</span></div><p class="tiny">Locked while you stay. Goes to $129 after the first hundred.</p><ul class="gets" id="gets"></ul><a class="btn wide" id="joinCta" style="margin-top:18px" href="#">Take a spot</a><p class="tiny" style="text-align:center;margin:12px 0 0">Quit any time. No phone call required.</p></div>
+  <h2>Or just buy a kit</h2><p class="tiny" style="margin:-6px 0 14px">You do not have to join. Members get the lower price.</p><div class="card" id="pubKits"></div>
+  <p class="tiny" style="text-align:center;margin:34px 0 0">Seek &amp; Scale · <span id="contact"></span></p>
+</div>
+<script src="assets/config.js"></script><script src="assets/data.js"></script>
+<script>
+var TICK='<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>';
+document.getElementById('gets').innerHTML=['Ask anything at the Help Desk.','A member directory built around who can actually help.','A forum for requests, ideas, giveaways and shout-outs.','Local articles and resources that do not disappear in a feed.','Member pricing on kits and execution help.'].map(function(x){return '<li>'+TICK+'<span>'+x+'</span></li>';}).join('');
+var cta=document.getElementById('joinCta');
+if(/^https:\/\/buy\.stripe\.com\//.test(STRIPE_PAYMENT_LINK)&&STRIPE_PAYMENT_LINK.indexOf('YOUR-LINK')<0)cta.href=STRIPE_PAYMENT_LINK;else cta.href='mailto:'+encodeURIComponent(SITE_CONTACT_EMAIL)+'?subject='+encodeURIComponent('Seek & Scale membership');
+document.getElementById('contact').textContent=SITE_CONTACT_EMAIL+' · '+SITE_CONTACT_PHONE;
+document.getElementById('pubKits').innerHTML=KITS.map(function(k){return '<div class="kit"><div class="kd"><div class="kn">'+k.name+'</div><div class="kp">'+k.desc+'<br><b>$47</b> · <s>$27</s> for members</div></div><button class="act soft" data-kit="'+k.key+'">Buy</button></div>';}).join('');
+document.addEventListener('click',function(e){var b=e.target.closest('[data-kit]');if(!b)return;var k=KITS.find(function(x){return x.key===b.dataset.kit;});var u=KIT_PUBLIC_LINKS[b.dataset.kit];if(u&&/^https?:\/\//.test(u))location.href=u;else location.href='mailto:'+encodeURIComponent(SITE_CONTACT_EMAIL)+'?subject='+encodeURIComponent(k.name)+'&body='+encodeURIComponent('I want the '+k.name+'.');});
+if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+</script></body></html>

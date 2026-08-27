@@ -1,0 +1,81 @@
+/* Admin-only styles. Layers on top of assets/app.css so the brand carries over. */
+
+.sect{display:none}
+.sect.on{display:block}
+[hidden]{display:none !important}
+
+/* ---- stats ---- */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:6px}
+.stat{border:1.5px solid var(--gray);border-radius:16px;padding:15px}
+.stat .n{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12.5px;color:var(--muted);margin-top:5px}
+.stat.hot .n{box-shadow:inset 0 -10px 0 var(--gold);padding:0 2px;display:inline-block}
+
+/* ---- toolbar ---- */
+.toolbar{display:flex;gap:9px;margin:0 0 14px;flex-wrap:wrap}
+.search,.sel{border:1.5px solid var(--gray);border-radius:13px;padding:12px 14px;
+  background:var(--white);min-height:46px;font-size:15px}
+.search{flex:1;min-width:170px}
+.sel{flex:none}
+.search:focus,.sel:focus{outline:none;border-color:var(--jet)}
+
+/* ---- rows ---- */
+.row{display:flex;gap:13px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .rd{flex:1;min-width:0}
+.row .rt{font-size:15.5px;font-weight:700;line-height:1.3}
+.row .rs{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5;
+  overflow-wrap:anywhere}
+.row .ra{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.thumb{width:46px;height:46px;border-radius:12px;flex:none;background:var(--surface);
+  object-fit:cover;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:13px;color:#fff}
+.mini{border:1.5px solid var(--gray);border-radius:999px;padding:8px 13px;
+  font-size:13px;font-weight:650;min-height:38px;display:inline-flex;align-items:center}
+.mini.dark{background:var(--jet);color:#fff;border-color:var(--jet)}
+.mini.warn{border-color:#C4443B;color:#C4443B}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;font-weight:700;
+  letter-spacing:.04em}
+
+.pill.on{background:var(--jet);color:#fff;border-color:var(--jet)}
+.grid2{display:grid;grid-template-columns:1fr;gap:0 12px}
+
+/* ---- drawer ---- */
+#scrim{position:fixed;inset:0;background:rgba(17,17,17,.5);z-index:60;opacity:0;
+  pointer-events:none;transition:opacity .2s}
+#scrim.on{opacity:1;pointer-events:auto}
+#drawer{position:fixed;left:0;right:0;bottom:0;z-index:61;background:#fff;
+  border-radius:24px 24px 0 0;padding:8px 18px calc(18px + env(safe-area-inset-bottom));
+  transform:translateY(103%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+  max-height:92vh;overflow-y:auto;max-width:660px;margin:0 auto}
+#drawer.on{transform:translateY(0)}
+.grab{width:40px;height:4.5px;border-radius:99px;background:var(--gray);margin:7px auto 14px}
+.dhead{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.dhead h2{font-size:19px;letter-spacing:-.02em;text-transform:none;color:var(--jet)}
+.dhead .pill{margin-left:auto}
+.dfoot{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:16px;
+  border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff;padding-bottom:6px}
+#dBody textarea{width:100%;border:1.5px solid var(--gray);border-radius:13px;padding:13px;
+  min-height:110px;resize:vertical;line-height:1.5}
+#dBody select,#dBody input[type=file]{width:100%;border:1.5px solid var(--gray);
+  border-radius:13px;padding:13px;background:#fff}
+#dBody textarea:focus,#dBody select:focus{outline:none;border-color:var(--jet)}
+.preview{width:100%;max-height:170px;object-fit:cover;border-radius:13px;margin-top:9px}
+
+/* ---- toast ---- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,24px);z-index:80;
+  background:var(--jet);color:#fff;border-radius:999px;padding:13px 22px;font-size:14.5px;
+  font-weight:650;opacity:0;pointer-events:none;transition:all .22s;max-width:88vw}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.bad{background:#B4302A}
+
+.warnbox{background:#FFF6D6;border:1.5px solid #E8CE5A;border-radius:16px;
+  padding:15px;margin-bottom:16px;font-size:14px;line-height:1.5}
+
+@media(min-width:920px){
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .grid2{grid-template-columns:1fr 1fr}
+  #drawer{border-radius:20px;top:50%;bottom:auto;left:50%;right:auto;
+    transform:translate(-50%,-46%) scale(.97);width:620px;max-height:86vh;opacity:0}
+  #drawer.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+}

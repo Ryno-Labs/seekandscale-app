@@ -1,157 +1,757 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111111">
-<meta name="robots" content="noindex, nofollow">
-<title>Admin · seek+scale.</title>
-<link rel="stylesheet" href="../assets/app.css">
-<link rel="stylesheet" href="admin.css">
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <title>Admin · Seek & Scale</title>
+
+  <style>
+    :root {
+      --ink: #111111;
+      --muted: #6b6b6b;
+      --line: #e8e8e8;
+      --soft: #f6f6f4;
+      --white: #ffffff;
+      --danger: #b42318;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--soft);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .login-wrap {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 850;
+      letter-spacing: -0.05em;
+      margin-bottom: 30px;
+    }
+
+    .logo span {
+      color: #777;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 32px;
+      letter-spacing: -0.04em;
+    }
+
+    h2 {
+      font-size: 22px;
+      letter-spacing: -0.025em;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 7px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #d8d8d8;
+      background: white;
+      border-radius: 10px;
+      padding: 12px 13px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #111;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      background: var(--ink);
+      color: white;
+      font-weight: 750;
+    }
+
+    .btn.secondary {
+      background: white;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn.danger {
+      background: var(--danger);
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .login-card .btn {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .admin {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+    }
+
+    .sidebar {
+      background: var(--ink);
+      color: white;
+      padding: 25px 18px;
+      min-height: 100vh;
+    }
+
+    .sidebar .logo {
+      margin: 0 10px 34px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      text-align: left;
+      background: transparent;
+      color: #aaa;
+      padding: 11px 12px;
+      border-radius: 9px;
+      margin-bottom: 3px;
+      font-weight: 650;
+    }
+
+    .nav-btn.active,
+    .nav-btn:hover {
+      background: #262626;
+      color: white;
+    }
+
+    .main {
+      padding: 34px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 32px;
+      letter-spacing: -0.04em;
+    }
+
+    .member-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .member-row:last-child {
+      border-bottom: 0;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #ededed;
+      object-fit: cover;
+      flex: 0 0 auto;
+    }
+
+    .member-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .member-name {
+      font-weight: 800;
+    }
+
+    .member-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 18px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .form-section {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .form-section:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .upload-box {
+      border: 1px dashed #c8c8c8;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 130px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    @media (max-width: 800px) {
+      .admin {
+        display: block;
+      }
+
+      .sidebar {
+        min-height: auto;
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      .stats,
+      .form-grid,
+      .media-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ===================== LOGIN GATE ===================== -->
-<div id="gate" class="login-wrap">
-  <div class="login-logo">seek<i>+</i><br>scale.</div>
-  <p class="login-tag">Admin</p>
+  <!-- LOGIN -->
+  <section id="loginView" class="login-wrap">
+    <div class="login-card">
+      <div class="logo">seek<span>+</span>scale.</div>
 
-  <div class="field"><label for="em">Email</label>
-    <input id="em" type="email" autocomplete="username" placeholder="ryan@seekandscale.com"></div>
-  <div class="field"><label for="pw">Password</label>
-    <input id="pw" type="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
+      <h1>Admin</h1>
+      <p class="muted">Sign in to manage the network.</p>
 
-  <button class="btn wide" id="signIn" style="margin-top:8px">Sign in</button>
-  <button class="btn wide ghost" id="magic" style="margin-top:10px">Email me a link instead</button>
-  <p class="tiny" id="gateMsg" style="margin-top:16px;text-align:center"></p>
-</div>
+      <form id="loginForm">
+        <label for="loginEmail">Email</label>
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="email"
+          required
+        >
 
-<!-- ===================== DASHBOARD ===================== -->
-<div id="app" hidden>
-  <header class="top">
-    <div class="logo">seek<i>+</i><br>scale.</div>
-    <div class="top-right">
-      <div class="whoami"><span class="nm" id="meName">&mdash;</span><span class="bz">Admin</span></div>
-      <button class="pill" id="signOut">Sign out</button>
+        <label for="loginPassword">Password</label>
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button class="btn" type="submit">
+          Sign in
+        </button>
+
+        <div id="loginError" class="error"></div>
+      </form>
     </div>
-  </header>
+  </section>
 
-  <div class="shell">
-    <nav class="side" id="side"></nav>
-    <main>
-      <div id="banner"></div>
 
-      <!-- ---------- OVERVIEW ---------- -->
-      <section class="sect on" id="s-overview">
-        <h1>Overview</h1>
-        <p class="sub" id="today"></p>
-        <div class="stats" id="stats"></div>
+  <!-- ADMIN APP -->
+  <section id="adminView" class="admin hidden">
 
-        <h2>Waiting on you</h2>
-        <div class="card" id="pendingBox"></div>
-      </section>
+    <aside class="sidebar">
+      <div class="logo">seek<span>+</span>scale.</div>
 
-      <!-- ---------- GENERIC CRUD SECTIONS ---------- -->
-      <section class="sect" id="s-businesses"></section>
-      <section class="sect" id="s-posts"></section>
-      <section class="sect" id="s-events"></section>
-      <section class="sect" id="s-listings"></section>
+      <button class="nav-btn active" data-view="dashboard">
+        Overview
+      </button>
 
-      <!-- ---------- HELP REQUESTS ---------- -->
-      <section class="sect" id="s-help">
-        <h1>Help Desk</h1>
-        <p class="sub">Private requests sent from the member Help Desk.</p>
-        <div class="toolbar">
-          <input class="search" id="helpSearch" placeholder="Search name, business, subject…">
-          <select class="sel" id="helpStatus">
-            <option value="">All statuses</option>
-            <option value="new">New</option>
-            <option value="working">Working</option>
-            <option value="done">Done</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-        <div id="helpList"></div>
-      </section>
+      <button class="nav-btn" data-view="members">
+        Members
+      </button>
 
-      <!-- ---------- MEMBERS ---------- -->
-      <section class="sect" id="s-members">
-        <h1>Members</h1>
-        <p class="sub">Approve, suspend, or promote. Suspended members keep their row.</p>
-        <div class="toolbar">
-          <input class="search" id="memberSearch" placeholder="Search name, email, business&hellip;">
-          <select class="sel" id="memberStatus">
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-          </select>
-        </div>
-        <div id="memberList"></div>
-      </section>
+      <button class="nav-btn" data-view="posts">
+        Posts
+      </button>
 
-      <!-- ---------- INVITES ---------- -->
-      <section class="sect" id="s-invites">
-        <h1>Invites</h1>
-        <p class="sub">Codes are made on the server. Nothing here can be faked from a browser.</p>
+      <button class="nav-btn" data-view="resources">
+        Resources
+      </button>
 
-        <div class="card">
-          <div class="eyebrow">Make invites</div>
-          <div class="grid2" style="margin-top:12px">
-            <div class="field"><label for="ivLabel">Label (for you)</label>
-              <input id="ivLabel" placeholder="Paid Aug 26 &mdash; Jared"></div>
-            <div class="field"><label for="ivEmail">Lock to email (optional)</label>
-              <input id="ivEmail" type="email" placeholder="leave blank for anyone"></div>
-            <div class="field"><label for="ivUses">Uses per code</label>
-              <input id="ivUses" type="number" min="1" value="1"></div>
-            <div class="field"><label for="ivCount">How many codes</label>
-              <input id="ivCount" type="number" min="1" max="50" value="1"></div>
-            <div class="field"><label for="ivExp">Expires (optional)</label>
-              <input id="ivExp" type="date"></div>
+      <button class="nav-btn" data-view="help">
+        Get Help Requests
+      </button>
+
+      <button class="nav-btn" data-view="invites">
+        Invites
+      </button>
+    </aside>
+
+
+    <main class="main">
+
+      <div class="topbar">
+        <div>
+          <div class="muted" style="font-size:13px">
+            Community V1
           </div>
-          <button class="btn wide" id="mkInvite" style="margin-top:6px">Create</button>
+          <strong id="adminName">Admin</strong>
         </div>
 
-        <div class="toolbar">
-          <input class="search" id="inviteSearch" placeholder="Search code or label&hellip;">
-          <select class="sel" id="inviteState">
-            <option value="">All</option>
-            <option value="live">Usable</option>
-            <option value="used">Used up</option>
-            <option value="revoked">Turned off</option>
-          </select>
+        <button id="signOutBtn" class="btn secondary">
+          Sign out
+        </button>
+      </div>
+
+
+      <!-- OVERVIEW -->
+      <section id="view-dashboard" class="admin-page">
+        <h1>Overview</h1>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="muted">Active members</span>
+            <strong id="statMembers">—</strong>
+          </div>
+
+          <div class="stat">
+            <span class="muted">Posts</span>
+            <strong id="statPosts">—</strong>
+          </div>
+
+          <div class="stat">
+            <span class="muted">Open help requests</span>
+            <strong id="statHelp">—</strong>
+          </div>
         </div>
-        <div id="inviteList"></div>
       </section>
 
-      <!-- ---------- PAYMENTS ---------- -->
-      <section class="sect" id="s-payments">
-        <h1>Payments</h1>
-        <p class="sub">Every Stripe payment, and the invite it produced.</p>
-        <div class="toolbar"><input class="search" id="paySearch" placeholder="Search email&hellip;"></div>
-        <div id="payList"></div>
+
+      <!-- MEMBERS -->
+      <section id="view-members" class="admin-page hidden">
+
+        <div class="section-head">
+          <div>
+            <h1>Members</h1>
+            <p class="muted">
+              Build and manage the people inside the network.
+            </p>
+          </div>
+
+          <button id="newMemberBtn" class="btn">
+            Add member
+          </button>
+        </div>
+
+        <div class="panel">
+          <input
+            id="memberSearch"
+            type="search"
+            placeholder="Search members, business, trade or city..."
+          >
+
+          <div id="memberList"></div>
+        </div>
+
       </section>
+
+
+      <!-- MEMBER EDITOR -->
+      <section id="view-member-editor" class="admin-page hidden">
+
+        <div class="section-head">
+          <div>
+            <button
+              id="backToMembersBtn"
+              class="btn secondary"
+              type="button"
+            >
+              ← Members
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+
+          <h1 id="memberEditorTitle">Add member</h1>
+
+          <input id="memberId" type="hidden">
+
+
+          <div class="form-section">
+
+            <h2>Person</h2>
+
+            <div class="form-grid">
+
+              <div>
+                <label>Full name</label>
+                <input id="memberFullName">
+              </div>
+
+              <div>
+                <label>Email</label>
+                <input id="memberEmail" type="email">
+              </div>
+
+              <div class="full">
+                <label>Headline</label>
+                <input
+                  id="memberHeadline"
+                  placeholder="Owner · Smith Plumbing"
+                >
+              </div>
+
+              <div class="full">
+                <label>Bio</label>
+                <textarea id="memberBio"></textarea>
+              </div>
+
+              <div class="full">
+                <label>What are they looking for?</label>
+                <textarea id="memberLookingFor"></textarea>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-section">
+
+            <h2>Business</h2>
+
+            <div class="form-grid">
+
+              <div>
+                <label>Business name</label>
+                <input id="businessName">
+              </div>
+
+              <div>
+                <label>Trade</label>
+                <input
+                  id="businessTrade"
+                  placeholder="Plumbing"
+                >
+              </div>
+
+              <div>
+                <label>City</label>
+                <input
+                  id="businessCity"
+                  placeholder="Georgetown"
+                >
+              </div>
+
+              <div>
+                <label>Brand color</label>
+                <input
+                  id="businessColor"
+                  value="#111111"
+                >
+              </div>
+
+              <div class="full">
+                <label>What they do</label>
+                <textarea id="businessWhatTheyDo"></textarea>
+              </div>
+
+              <div class="full">
+                <label>How they can help other members</label>
+                <textarea id="businessHelpsWith"></textarea>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-section">
+
+            <h2>Contact</h2>
+
+            <div class="form-grid">
+
+              <div>
+                <label>Personal phone</label>
+                <input id="memberPhone" type="tel">
+              </div>
+
+              <div>
+                <label>Business phone</label>
+                <input id="businessPhone" type="tel">
+              </div>
+
+              <div>
+                <label>Business email</label>
+                <input id="businessEmail" type="email">
+              </div>
+
+              <div>
+                <label>Website</label>
+                <input id="businessWebsite" type="url">
+              </div>
+
+              <div>
+                <label>Instagram</label>
+                <input id="memberInstagram" type="url">
+              </div>
+
+              <div>
+                <label>LinkedIn</label>
+                <input id="memberLinkedIn" type="url">
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-section">
+
+            <h2>Brand & images</h2>
+
+            <div class="media-grid">
+
+              <div class="upload-box">
+                <label>Profile photo</label>
+                <input
+                  id="profilePhotoFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+                <input id="profilePhotoUrl" type="hidden">
+              </div>
+
+              <div class="upload-box">
+                <label>Business logo</label>
+                <input
+                  id="businessLogoFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+                <input id="businessLogoUrl" type="hidden">
+              </div>
+
+              <div class="upload-box">
+                <label>Brand banner</label>
+                <input
+                  id="businessBannerFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+                <input id="businessBannerUrl" type="hidden">
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="actions">
+
+            <button id="saveMemberBtn" class="btn">
+              Save member
+            </button>
+
+            <button
+              id="createInviteBtn"
+              class="btn secondary"
+              disabled
+            >
+              Create invite
+            </button>
+
+          </div>
+
+          <div id="memberMessage" class="muted" style="margin-top:14px"></div>
+
+        </div>
+
+      </section>
+
+
+      <!-- POSTS -->
+      <section id="view-posts" class="admin-page hidden">
+        <h1>Posts</h1>
+        <div class="panel">
+          Community post management will live here.
+        </div>
+      </section>
+
+
+      <!-- RESOURCES -->
+      <section id="view-resources" class="admin-page hidden">
+        <h1>Resources</h1>
+        <div class="panel">
+          Resource management will live here.
+        </div>
+      </section>
+
+
+      <!-- HELP -->
+      <section id="view-help" class="admin-page hidden">
+        <h1>Get Help Requests</h1>
+        <div class="panel" id="helpList">
+          No requests yet.
+        </div>
+      </section>
+
+
+      <!-- INVITES -->
+      <section id="view-invites" class="admin-page hidden">
+        <h1>Invites</h1>
+        <div class="panel" id="inviteList">
+          Invites will appear here.
+        </div>
+      </section>
+
     </main>
-  </div>
-</div>
 
-<!-- ===================== EDIT DRAWER ===================== -->
-<div id="scrim"></div>
-<div id="drawer" role="dialog" aria-modal="true" aria-label="Edit">
-  <div class="grab"></div>
-  <div class="dhead"><h2 id="dTitle" style="margin:0">Edit</h2>
-    <button class="pill" id="dClose">Close</button></div>
-  <div id="dBody"></div>
-  <div class="dfoot">
-    <button class="act soft" id="dDelete">Delete</button>
-    <button class="btn" id="dSave" style="margin-left:auto">Save</button>
-  </div>
-</div>
+  </section>
 
-<div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../assets/config.js"></script>
-<script src="admin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/config.js"></script>
+
+  <!-- We will create this next -->
+  <script src="community-admin.js"></script>
+
 </body>
 </html>

@@ -1,757 +1,1564 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · seek+scale.</title>
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
+<style>
+/* ==========================================================================
+   SEEK + SCALE — COMMUNITY V1 ADMIN
+   Visual system restored from the original white / black / yellow build.
+   ========================================================================== */
 
-  <title>Admin · Seek & Scale</title>
+:root{
+  --jet:#111111;
+  --white:#FFFFFF;
+  --gray:#E4E4E4;
+  --line:#EDEDED;
+  --surface:#F6F6F5;
+  --muted:#5F5F5F;
+  --dim:#909090;
+  --gold:#FFD700;
+  --plus:#4D4D4D;
+  --danger:#B4302A;
+  --ok:#126B3F;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
 
-  <style>
-    :root {
-      --ink: #111111;
-      --muted: #6b6b6b;
-      --line: #e8e8e8;
-      --soft: #f6f6f4;
-      --white: #ffffff;
-      --danger: #b42318;
-      --radius: 16px;
-    }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--white);
+  color:var(--jet);
+  font-size:16.5px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{max-width:100%}
+[hidden]{display:none!important}
+:focus-visible{outline:2.5px solid var(--jet);outline-offset:2px;border-radius:8px}
 
-    * {
-      box-sizing: border-box;
-    }
+/* ---------- BRAND ---------- */
+.logo,.login-logo{
+  line-height:.84;
+  letter-spacing:-.05em;
+  font-weight:800;
+  flex:none;
+}
+.logo{font-size:19px}
+.login-logo{font-size:44px;margin-bottom:14px}
+.logo i,.login-logo i{color:var(--plus);font-style:normal}
 
-    body {
-      margin: 0;
-      font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-      background: var(--soft);
-      color: var(--ink);
-    }
+/* ---------- LOGIN ---------- */
+.login-wrap{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:32px 22px calc(40px + env(safe-area-inset-bottom));
+  max-width:440px;
+  margin:0 auto;
+}
+.login-tag{font-size:17px;color:var(--muted);margin:0 0 34px}
+.field{margin-bottom:14px}
+.field label{
+  display:block;
+  font-size:13.5px;
+  font-weight:650;
+  margin-bottom:7px;
+}
+.field input,.field textarea,.field select{
+  width:100%;
+  border:1.5px solid var(--gray);
+  border-radius:14px;
+  padding:14px 15px;
+  background:var(--white);
+}
+.field textarea{min-height:108px;resize:vertical;line-height:1.5}
+.field input:focus,.field textarea:focus,.field select:focus{
+  outline:none;
+  border-color:var(--jet);
+}
+.tiny{font-size:13px;color:var(--muted);line-height:1.45}
+.error{color:var(--danger)}
+.success{color:var(--ok)}
 
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
+/* ---------- BUTTONS ---------- */
+.btn{
+  border:0;
+  background:var(--jet);
+  color:var(--white);
+  border-radius:999px;
+  padding:14px 22px;
+  font-weight:700;
+  font-size:15.5px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  min-height:50px;
+}
+.btn.wide{width:100%}
+.btn.sm{min-height:42px;padding:10px 16px;font-size:14px}
+.btn.ghost{
+  background:transparent;
+  color:var(--jet);
+  border:1.5px solid var(--gray);
+}
+.btn.yellow{background:var(--gold);color:var(--jet)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pill{
+  border:1.5px solid var(--gray);
+  border-radius:999px;
+  padding:9px 14px;
+  font-size:13.5px;
+  font-weight:650;
+  white-space:nowrap;
+  background:var(--white);
+}
+.pill:active{background:var(--surface)}
 
-    button {
-      cursor: pointer;
-    }
+/* ---------- TOP BAR ---------- */
+.top{
+  position:sticky;
+  top:0;
+  z-index:40;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:saturate(1.5) blur(14px);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 16px;
+}
+.top-right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.whoami{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  line-height:1.2;
+}
+.whoami .nm{font-size:14px;font-weight:750}
+.whoami .bz{font-size:12px;color:var(--muted)}
 
-    .hidden {
-      display: none !important;
-    }
+/* ---------- LAYOUT ---------- */
+.shell{display:block}
+.side{display:none}
+main{
+  padding:20px 16px 60px;
+  max-width:760px;
+  margin:0 auto;
+}
+.mobile-nav{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+  scrollbar-width:none;
+}
+.mobile-nav::-webkit-scrollbar{display:none}
+.mobile-nav button{
+  flex:none;
+  border:1.5px solid var(--gray);
+  background:#fff;
+  border-radius:999px;
+  padding:9px 13px;
+  font-size:13px;
+  font-weight:700;
+}
+.mobile-nav button.on{
+  background:var(--gold);
+  border-color:var(--gold);
+}
 
-    .login-wrap {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
+/* ---------- TYPE ---------- */
+h1{
+  font-size:25px;
+  line-height:1.16;
+  letter-spacing:-.028em;
+  margin:0 0 6px;
+  font-weight:800;
+}
+h2{
+  font-size:12.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:30px 0 12px;
+  font-weight:750;
+}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}
+.eyebrow{
+  font-size:11px;
+  font-weight:750;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
 
-    .login-card {
-      width: 100%;
-      max-width: 420px;
-      background: white;
-      padding: 32px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-    }
+/* ---------- SECTIONS / CARDS ---------- */
+.view{display:none}
+.view.on{display:block}
+.card{
+  background:var(--white);
+  border:1.5px solid var(--gray);
+  border-radius:18px;
+  padding:17px;
+  margin-bottom:12px;
+}
+.card.flat{background:var(--surface);border-color:transparent}
+.card.yellow{
+  background:#FFFBE6;
+  border-color:#F1D94D;
+}
+.split-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:20px;
+}
+.split-head .sub{margin-bottom:0}
 
-    .logo {
-      font-size: 28px;
-      font-weight: 850;
-      letter-spacing: -0.05em;
-      margin-bottom: 30px;
-    }
+/* ---------- STATS ---------- */
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+  margin-bottom:6px;
+}
+.stat{
+  border:1.5px solid var(--gray);
+  border-radius:16px;
+  padding:15px;
+}
+.stat .n{
+  font-size:30px;
+  font-weight:800;
+  letter-spacing:-.03em;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.stat .l{
+  font-size:12.5px;
+  color:var(--muted);
+  margin-top:5px;
+}
+.stat.hot .n{
+  box-shadow:inset 0 -10px 0 var(--gold);
+  padding:0 2px;
+  display:inline-block;
+}
 
-    .logo span {
-      color: #777;
-    }
+/* ---------- TOOLBAR ---------- */
+.toolbar{
+  display:flex;
+  gap:9px;
+  margin:0 0 14px;
+  flex-wrap:wrap;
+}
+.search,.sel{
+  border:1.5px solid var(--gray);
+  border-radius:13px;
+  padding:12px 14px;
+  background:var(--white);
+  min-height:46px;
+  font-size:15px;
+}
+.search{flex:1;min-width:170px}
+.sel{flex:none}
+.search:focus,.sel:focus{outline:none;border-color:var(--jet)}
 
-    h1,
-    h2,
-    h3,
-    p {
-      margin-top: 0;
-    }
+/* ---------- LIST ROWS ---------- */
+.row{
+  display:flex;
+  gap:13px;
+  align-items:flex-start;
+  padding:15px 0;
+  border-bottom:1px solid var(--line);
+}
+.row:last-child{border-bottom:none}
+.row .rd{flex:1;min-width:0}
+.row .rt{font-size:15.5px;font-weight:700;line-height:1.3}
+.row .rs{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.row .ra{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:9px;
+}
+.thumb{
+  width:46px;
+  height:46px;
+  border-radius:12px;
+  flex:none;
+  background:var(--jet);
+  object-fit:cover;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:13px;
+  color:#fff;
+  overflow:hidden;
+}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.mini{
+  border:1.5px solid var(--gray);
+  background:#fff;
+  border-radius:999px;
+  padding:8px 13px;
+  font-size:13px;
+  font-weight:650;
+  min-height:38px;
+  display:inline-flex;
+  align-items:center;
+}
+.mini.dark{background:var(--jet);color:#fff;border-color:var(--jet)}
+.mini.yellow{background:var(--gold);border-color:var(--gold)}
+.code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.03em;
+}
 
-    h1 {
-      font-size: 32px;
-      letter-spacing: -0.04em;
-    }
+/* ---------- CHIPS ---------- */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11.5px;
+  font-weight:750;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  padding:5px 10px;
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--muted);
+}
+.chip.active{background:var(--gold);color:var(--jet)}
+.chip.admin{background:var(--jet);color:#fff}
 
-    h2 {
-      font-size: 22px;
-      letter-spacing: -0.025em;
-    }
+/* ---------- EMPTY / MESSAGES ---------- */
+.empty{
+  padding:26px 10px;
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+}
+.message{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:14px;
+  font-size:14px;
+  display:none;
+}
+.message.on{display:block}
+.message.bad{background:#FFF0EE;color:#84251F}
+.message.good{background:#ECF8F1;color:#0D5B34}
 
-    .muted {
-      color: var(--muted);
-    }
+/* ---------- EDITOR DRAWER ---------- */
+#scrim{
+  position:fixed;
+  inset:0;
+  background:rgba(17,17,17,.5);
+  z-index:60;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+#scrim.on{opacity:1;pointer-events:auto}
+#memberDrawer{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:61;
+  background:#fff;
+  border-radius:24px 24px 0 0;
+  padding:8px 18px calc(18px + env(safe-area-inset-bottom));
+  transform:translateY(103%);
+  transition:transform .26s cubic-bezier(.32,.72,0,1);
+  max-height:94vh;
+  overflow-y:auto;
+  max-width:720px;
+  margin:0 auto;
+}
+#memberDrawer.on{transform:translateY(0)}
+.grab{
+  width:40px;
+  height:4.5px;
+  border-radius:99px;
+  background:var(--gray);
+  margin:7px auto 14px;
+}
+.dhead{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.dhead h3{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.02em;
+}
+.dhead .pill{margin-left:auto}
+.dfoot{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  position:sticky;
+  bottom:-18px;
+  background:#fff;
+  padding-bottom:18px;
+}
+.grid2{display:grid;grid-template-columns:1fr;gap:0 12px}
+.filebox{
+  border:1.5px dashed var(--gray);
+  border-radius:14px;
+  padding:13px;
+  margin-bottom:14px;
+}
+.filebox label{
+  display:block;
+  font-size:13.5px;
+  font-weight:650;
+  margin-bottom:7px;
+}
+.filebox input{width:100%}
+.preview{
+  width:100%;
+  max-height:180px;
+  object-fit:cover;
+  border-radius:13px;
+  margin-top:10px;
+  display:none;
+}
+.preview.on{display:block}
+.checkrow{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  padding:4px 0 14px;
+}
+.checkrow label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:13.5px;
+  font-weight:650;
+}
+.checkrow input{width:auto}
 
-    label {
-      display: block;
-      margin: 18px 0 7px;
-      font-size: 13px;
-      font-weight: 750;
-    }
-
-    input,
-    textarea,
-    select {
-      width: 100%;
-      border: 1px solid #d8d8d8;
-      background: white;
-      border-radius: 10px;
-      padding: 12px 13px;
-      outline: none;
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #111;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 10px;
-      padding: 12px 16px;
-      background: var(--ink);
-      color: white;
-      font-weight: 750;
-    }
-
-    .btn.secondary {
-      background: white;
-      color: var(--ink);
-      border: 1px solid var(--line);
-    }
-
-    .btn.danger {
-      background: var(--danger);
-    }
-
-    .btn:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    .login-card .btn {
-      width: 100%;
-      margin-top: 20px;
-    }
-
-    .error {
-      color: var(--danger);
-      font-size: 13px;
-      margin-top: 12px;
-    }
-
-    .admin {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 230px 1fr;
-    }
-
-    .sidebar {
-      background: var(--ink);
-      color: white;
-      padding: 25px 18px;
-      min-height: 100vh;
-    }
-
-    .sidebar .logo {
-      margin: 0 10px 34px;
-    }
-
-    .nav-btn {
-      width: 100%;
-      border: 0;
-      text-align: left;
-      background: transparent;
-      color: #aaa;
-      padding: 11px 12px;
-      border-radius: 9px;
-      margin-bottom: 3px;
-      font-weight: 650;
-    }
-
-    .nav-btn.active,
-    .nav-btn:hover {
-      background: #262626;
-      color: white;
-    }
-
-    .main {
-      padding: 34px;
-      max-width: 1200px;
-      width: 100%;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
-    .panel {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 22px;
-      margin-bottom: 20px;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .stat {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 22px;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 32px;
-      letter-spacing: -0.04em;
-    }
-
-    .member-row {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      padding: 15px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .member-row:last-child {
-      border-bottom: 0;
-    }
-
-    .avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: #ededed;
-      object-fit: cover;
-      flex: 0 0 auto;
-    }
-
-    .member-main {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .member-name {
-      font-weight: 800;
-    }
-
-    .member-meta {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0 18px;
-    }
-
-    .full {
-      grid-column: 1 / -1;
-    }
-
-    .form-section {
-      margin-top: 28px;
-      padding-top: 22px;
-      border-top: 1px solid var(--line);
-    }
-
-    .form-section:first-child {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: 0;
-    }
-
-    .media-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .upload-box {
-      border: 1px dashed #c8c8c8;
-      border-radius: 12px;
-      padding: 16px;
-      min-height: 130px;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 25px;
-    }
-
-    @media (max-width: 800px) {
-      .admin {
-        display: block;
-      }
-
-      .sidebar {
-        min-height: auto;
-      }
-
-      .main {
-        padding: 20px;
-      }
-
-      .stats,
-      .form-grid,
-      .media-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .full {
-        grid-column: auto;
-      }
-    }
-  </style>
+/* ---------- DESKTOP ---------- */
+@media(min-width:920px){
+  .mobile-nav{display:none}
+  .shell{
+    display:flex;
+    max-width:1140px;
+    margin:0 auto;
+  }
+  .side{
+    display:block;
+    width:238px;
+    flex:none;
+    padding:24px 14px;
+    border-right:1.5px solid var(--line);
+    height:calc(100vh - 60px);
+    position:sticky;
+    top:60px;
+  }
+  .snav{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    border-radius:13px;
+    font-size:15px;
+    font-weight:650;
+    color:var(--muted);
+    width:100%;
+    margin-bottom:3px;
+    min-height:48px;
+    border:0;
+    background:transparent;
+  }
+  .snav.on{
+    background:var(--gold);
+    color:var(--jet);
+    font-weight:750;
+  }
+  main{
+    flex:1;
+    padding:30px 40px 90px;
+    max-width:780px;
+    margin:0;
+  }
+  h1{font-size:29px}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .grid2{grid-template-columns:1fr 1fr}
+  #memberDrawer{
+    border-radius:20px;
+    top:50%;
+    bottom:auto;
+    left:50%;
+    right:auto;
+    transform:translate(-50%,-46%) scale(.97);
+    width:700px;
+    max-height:88vh;
+    opacity:0;
+  }
+  #memberDrawer.on{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:1;
+  }
+}
+</style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <section id="loginView" class="login-wrap">
-    <div class="login-card">
-      <div class="logo">seek<span>+</span>scale.</div>
+<!-- ==================== LOGIN ==================== -->
+<div id="loginGate" class="login-wrap">
+  <div class="login-logo">seek<i>+</i><br>scale.</div>
+  <p class="login-tag">Admin</p>
 
-      <h1>Admin</h1>
-      <p class="muted">Sign in to manage the network.</p>
+  <div id="loginMessage" class="message"></div>
 
-      <form id="loginForm">
-        <label for="loginEmail">Email</label>
-        <input
-          id="loginEmail"
-          type="email"
-          autocomplete="email"
-          required
-        >
+  <div class="field">
+    <label for="loginEmail">Email</label>
+    <input id="loginEmail" type="email" autocomplete="username" placeholder="ryan@seekandscale.com">
+  </div>
 
-        <label for="loginPassword">Password</label>
-        <input
-          id="loginPassword"
-          type="password"
-          autocomplete="current-password"
-          required
-        >
+  <div class="field">
+    <label for="loginPassword">Password</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+  </div>
 
-        <button class="btn" type="submit">
-          Sign in
-        </button>
+  <button class="btn wide" id="loginBtn" style="margin-top:8px">Sign in</button>
+</div>
 
-        <div id="loginError" class="error"></div>
-      </form>
-    </div>
-  </section>
+<!-- ==================== ADMIN APP ==================== -->
+<div id="adminApp" hidden>
 
-
-  <!-- ADMIN APP -->
-  <section id="adminView" class="admin hidden">
-
-    <aside class="sidebar">
-      <div class="logo">seek<span>+</span>scale.</div>
-
-      <button class="nav-btn active" data-view="dashboard">
-        Overview
-      </button>
-
-      <button class="nav-btn" data-view="members">
-        Members
-      </button>
-
-      <button class="nav-btn" data-view="posts">
-        Posts
-      </button>
-
-      <button class="nav-btn" data-view="resources">
-        Resources
-      </button>
-
-      <button class="nav-btn" data-view="help">
-        Get Help Requests
-      </button>
-
-      <button class="nav-btn" data-view="invites">
-        Invites
-      </button>
-    </aside>
-
-
-    <main class="main">
-
-      <div class="topbar">
-        <div>
-          <div class="muted" style="font-size:13px">
-            Community V1
-          </div>
-          <strong id="adminName">Admin</strong>
-        </div>
-
-        <button id="signOutBtn" class="btn secondary">
-          Sign out
-        </button>
+  <header class="top">
+    <div class="logo">seek<i>+</i><br>scale.</div>
+    <div class="top-right">
+      <div class="whoami">
+        <span class="nm" id="adminName">—</span>
+        <span class="bz">Admin</span>
       </div>
+      <button class="pill" id="logoutBtn">Sign out</button>
+    </div>
+  </header>
 
+  <nav class="mobile-nav" id="mobileNav"></nav>
+
+  <div class="shell">
+
+    <aside class="side" id="sideNav"></aside>
+
+    <main>
+      <div id="pageMessage" class="message"></div>
 
       <!-- OVERVIEW -->
-      <section id="view-dashboard" class="admin-page">
-        <h1>Overview</h1>
+      <section class="view on" id="view-overview">
+        <div class="split-head">
+          <div>
+            <h1>Overview</h1>
+            <p class="sub">What is happening inside the network.</p>
+          </div>
+        </div>
 
         <div class="stats">
-          <div class="stat">
-            <span class="muted">Active members</span>
-            <strong id="statMembers">—</strong>
+          <div class="stat hot">
+            <div class="n" id="statMembers">—</div>
+            <div class="l">Active members</div>
           </div>
-
           <div class="stat">
-            <span class="muted">Posts</span>
-            <strong id="statPosts">—</strong>
+            <div class="n" id="statPosts">—</div>
+            <div class="l">Posts</div>
           </div>
-
           <div class="stat">
-            <span class="muted">Open help requests</span>
-            <strong id="statHelp">—</strong>
+            <div class="n" id="statHelp">—</div>
+            <div class="l">Open help requests</div>
           </div>
         </div>
-      </section>
 
+        <h2>Community V1</h2>
+        <div class="card yellow">
+          <div style="font-size:17px;font-weight:800;letter-spacing:-.015em">Community is the product.</div>
+          <p class="tiny" style="margin:7px 0 0">Members meet, share useful opportunities and resources, and can ask Seek &amp; Scale to execute something when they need it.</p>
+        </div>
+      </section>
 
       <!-- MEMBERS -->
-      <section id="view-members" class="admin-page hidden">
-
-        <div class="section-head">
+      <section class="view" id="view-members">
+        <div class="split-head">
           <div>
             <h1>Members</h1>
-            <p class="muted">
-              Build and manage the people inside the network.
-            </p>
+            <p class="sub">Build the profile first. Invite the owner when you are ready.</p>
           </div>
-
-          <button id="newMemberBtn" class="btn">
-            Add member
-          </button>
+          <button class="btn sm" id="addMemberBtn">Add member</button>
         </div>
 
-        <div class="panel">
-          <input
-            id="memberSearch"
-            type="search"
-            placeholder="Search members, business, trade or city..."
-          >
-
-          <div id="memberList"></div>
+        <div class="toolbar">
+          <input class="search" id="memberSearch" placeholder="Search name, business, trade or city…">
+          <select class="sel" id="memberStatus">
+            <option value="">All statuses</option>
+            <option value="draft">Draft</option>
+            <option value="invited">Invited</option>
+            <option value="active">Active</option>
+            <option value="hidden">Hidden</option>
+            <option value="suspended">Suspended</option>
+          </select>
         </div>
 
+        <div class="card" id="memberList">
+          <div class="empty">Loading members…</div>
+        </div>
       </section>
-
-
-      <!-- MEMBER EDITOR -->
-      <section id="view-member-editor" class="admin-page hidden">
-
-        <div class="section-head">
-          <div>
-            <button
-              id="backToMembersBtn"
-              class="btn secondary"
-              type="button"
-            >
-              ← Members
-            </button>
-          </div>
-        </div>
-
-        <div class="panel">
-
-          <h1 id="memberEditorTitle">Add member</h1>
-
-          <input id="memberId" type="hidden">
-
-
-          <div class="form-section">
-
-            <h2>Person</h2>
-
-            <div class="form-grid">
-
-              <div>
-                <label>Full name</label>
-                <input id="memberFullName">
-              </div>
-
-              <div>
-                <label>Email</label>
-                <input id="memberEmail" type="email">
-              </div>
-
-              <div class="full">
-                <label>Headline</label>
-                <input
-                  id="memberHeadline"
-                  placeholder="Owner · Smith Plumbing"
-                >
-              </div>
-
-              <div class="full">
-                <label>Bio</label>
-                <textarea id="memberBio"></textarea>
-              </div>
-
-              <div class="full">
-                <label>What are they looking for?</label>
-                <textarea id="memberLookingFor"></textarea>
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="form-section">
-
-            <h2>Business</h2>
-
-            <div class="form-grid">
-
-              <div>
-                <label>Business name</label>
-                <input id="businessName">
-              </div>
-
-              <div>
-                <label>Trade</label>
-                <input
-                  id="businessTrade"
-                  placeholder="Plumbing"
-                >
-              </div>
-
-              <div>
-                <label>City</label>
-                <input
-                  id="businessCity"
-                  placeholder="Georgetown"
-                >
-              </div>
-
-              <div>
-                <label>Brand color</label>
-                <input
-                  id="businessColor"
-                  value="#111111"
-                >
-              </div>
-
-              <div class="full">
-                <label>What they do</label>
-                <textarea id="businessWhatTheyDo"></textarea>
-              </div>
-
-              <div class="full">
-                <label>How they can help other members</label>
-                <textarea id="businessHelpsWith"></textarea>
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="form-section">
-
-            <h2>Contact</h2>
-
-            <div class="form-grid">
-
-              <div>
-                <label>Personal phone</label>
-                <input id="memberPhone" type="tel">
-              </div>
-
-              <div>
-                <label>Business phone</label>
-                <input id="businessPhone" type="tel">
-              </div>
-
-              <div>
-                <label>Business email</label>
-                <input id="businessEmail" type="email">
-              </div>
-
-              <div>
-                <label>Website</label>
-                <input id="businessWebsite" type="url">
-              </div>
-
-              <div>
-                <label>Instagram</label>
-                <input id="memberInstagram" type="url">
-              </div>
-
-              <div>
-                <label>LinkedIn</label>
-                <input id="memberLinkedIn" type="url">
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="form-section">
-
-            <h2>Brand & images</h2>
-
-            <div class="media-grid">
-
-              <div class="upload-box">
-                <label>Profile photo</label>
-                <input
-                  id="profilePhotoFile"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                >
-                <input id="profilePhotoUrl" type="hidden">
-              </div>
-
-              <div class="upload-box">
-                <label>Business logo</label>
-                <input
-                  id="businessLogoFile"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                >
-                <input id="businessLogoUrl" type="hidden">
-              </div>
-
-              <div class="upload-box">
-                <label>Brand banner</label>
-                <input
-                  id="businessBannerFile"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                >
-                <input id="businessBannerUrl" type="hidden">
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="actions">
-
-            <button id="saveMemberBtn" class="btn">
-              Save member
-            </button>
-
-            <button
-              id="createInviteBtn"
-              class="btn secondary"
-              disabled
-            >
-              Create invite
-            </button>
-
-          </div>
-
-          <div id="memberMessage" class="muted" style="margin-top:14px"></div>
-
-        </div>
-
-      </section>
-
 
       <!-- POSTS -->
-      <section id="view-posts" class="admin-page hidden">
+      <section class="view" id="view-posts">
         <h1>Posts</h1>
-        <div class="panel">
-          Community post management will live here.
+        <p class="sub">Community discussions, questions, wins, opportunities and announcements.</p>
+        <div class="card" id="postList">
+          <div class="empty">Loading posts…</div>
         </div>
       </section>
-
 
       <!-- RESOURCES -->
-      <section id="view-resources" class="admin-page hidden">
+      <section class="view" id="view-resources">
         <h1>Resources</h1>
-        <div class="panel">
-          Resource management will live here.
+        <p class="sub">Useful resources shared with members.</p>
+        <div class="card" id="resourceList">
+          <div class="empty">Loading resources…</div>
         </div>
       </section>
-
 
       <!-- HELP -->
-      <section id="view-help" class="admin-page hidden">
+      <section class="view" id="view-help">
         <h1>Get Help Requests</h1>
-        <div class="panel" id="helpList">
-          No requests yet.
+        <p class="sub">Private requests from members who want Seek &amp; Scale to help execute something.</p>
+
+        <div class="toolbar">
+          <select class="sel" id="helpStatus">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="scoping">Scoping</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <div class="card" id="helpList">
+          <div class="empty">Loading requests…</div>
         </div>
       </section>
 
-
       <!-- INVITES -->
-      <section id="view-invites" class="admin-page hidden">
+      <section class="view" id="view-invites">
         <h1>Invites</h1>
-        <div class="panel" id="inviteList">
-          Invites will appear here.
+        <p class="sub">Every invite belongs to a member profile you created first.</p>
+        <div class="card" id="inviteList">
+          <div class="empty">Loading invites…</div>
         </div>
       </section>
 
     </main>
+  </div>
+</div>
 
-  </section>
+<!-- ==================== MEMBER EDITOR ==================== -->
+<div id="scrim"></div>
 
+<div id="memberDrawer" role="dialog" aria-modal="true" aria-label="Member editor">
+  <div class="grab"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../assets/config.js"></script>
+  <div class="dhead">
+    <div>
+      <div class="eyebrow" id="editorEyebrow">Member</div>
+      <h3 id="editorTitle">Add member</h3>
+    </div>
+    <button class="pill" id="closeEditorBtn">Close</button>
+  </div>
 
-  <!-- We will create this next -->
-  <script src="community-admin.js"></script>
+  <div id="editorMessage" class="message"></div>
 
+  <input type="hidden" id="memberId">
+  <input type="hidden" id="businessId">
+
+  <h2>Person</h2>
+
+  <div class="grid2">
+    <div class="field">
+      <label for="fullName">Full name</label>
+      <input id="fullName" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="memberEmail">Email</label>
+      <input id="memberEmail" type="email" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="headline">Headline</label>
+    <input id="headline" placeholder="Owner · Smith Plumbing">
+  </div>
+
+  <div class="field">
+    <label for="bio">Bio</label>
+    <textarea id="bio" placeholder="Who are they?"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="lookingFor">What are they looking for?</label>
+    <textarea id="lookingFor" placeholder="The problem, person or opportunity that would help right now."></textarea>
+  </div>
+
+  <h2>Business</h2>
+
+  <div class="grid2">
+    <div class="field">
+      <label for="businessName">Business name</label>
+      <input id="businessName">
+    </div>
+    <div class="field">
+      <label for="trade">Trade</label>
+      <input id="trade" placeholder="Plumbing">
+    </div>
+    <div class="field">
+      <label for="city">City</label>
+      <input id="city" placeholder="Georgetown">
+    </div>
+    <div class="field">
+      <label for="brandColor">Brand color</label>
+      <input id="brandColor" placeholder="#111111">
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="whatTheyDo">What do they do?</label>
+    <textarea id="whatTheyDo"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="helpsWith">How can they help other members?</label>
+    <textarea id="helpsWith"></textarea>
+  </div>
+
+  <h2>Contact</h2>
+
+  <div class="grid2">
+    <div class="field">
+      <label for="memberPhone">Personal phone</label>
+      <input id="memberPhone" type="tel">
+    </div>
+    <div class="field">
+      <label for="businessPhone">Business phone</label>
+      <input id="businessPhone" type="tel">
+    </div>
+    <div class="field">
+      <label for="businessEmail">Business email</label>
+      <input id="businessEmail" type="email">
+    </div>
+    <div class="field">
+      <label for="website">Website</label>
+      <input id="website" placeholder="https://">
+    </div>
+    <div class="field">
+      <label for="instagram">Instagram</label>
+      <input id="instagram" placeholder="https://instagram.com/…">
+    </div>
+    <div class="field">
+      <label for="linkedin">LinkedIn</label>
+      <input id="linkedin" placeholder="https://linkedin.com/…">
+    </div>
+  </div>
+
+  <div class="checkrow">
+    <label><input type="checkbox" id="showEmail"> Show email</label>
+    <label><input type="checkbox" id="showPhone" checked> Show phone</label>
+    <label><input type="checkbox" id="showSocials" checked> Show socials</label>
+  </div>
+
+  <h2>Brand &amp; images</h2>
+
+  <div class="filebox">
+    <label for="profilePhoto">Profile photo</label>
+    <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp">
+    <img id="profilePreview" class="preview" alt="">
+  </div>
+
+  <div class="filebox">
+    <label for="businessLogo">Business logo</label>
+    <input id="businessLogo" type="file" accept="image/jpeg,image/png,image/webp">
+    <img id="logoPreview" class="preview" alt="">
+  </div>
+
+  <div class="filebox">
+    <label for="businessBanner">Brand banner</label>
+    <input id="businessBanner" type="file" accept="image/jpeg,image/png,image/webp">
+    <img id="bannerPreview" class="preview" alt="">
+  </div>
+
+  <div class="dfoot">
+    <button class="btn ghost sm" id="createInviteBtn" style="display:none">Create invite</button>
+    <button class="btn sm" id="saveMemberBtn" style="margin-left:auto">Save member</button>
+  </div>
+</div>
+
+<!-- Supabase browser library + existing browser-safe config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../assets/config.js?v=community1"></script>
+
+<script>
+/* ==========================================================================
+   COMMUNITY V1 ADMIN — self-contained page logic
+   Uses the existing browser-safe Supabase config and RLS.
+   No service-role key is used here.
+   ========================================================================== */
+
+(function(){
+  'use strict';
+
+  var client = null;
+  var adminMember = null;
+  var membersCache = [];
+  var businessesCache = [];
+  var selectedMember = null;
+  var selectedBusiness = null;
+
+  var NAV = [
+    ['overview','Overview'],
+    ['members','Members'],
+    ['posts','Posts'],
+    ['resources','Resources'],
+    ['help','Get Help Requests'],
+    ['invites','Invites']
+  ];
+
+  function $(id){ return document.getElementById(id); }
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function initials(name){
+    var p = String(name || '?').trim().split(/\s+/).filter(Boolean);
+    return ((p[0] ? p[0][0] : '') + (p[1] ? p[1][0] : '')).toUpperCase() || '?';
+  }
+
+  function fmtDate(v){
+    if(!v) return '—';
+    try{
+      return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));
+    }catch(e){ return v; }
+  }
+
+  function message(el, text, type){
+    if(!el) return;
+    el.textContent = text || '';
+    el.className = 'message' + (text ? ' on ' + (type || '') : '');
+  }
+
+  function initClient(){
+    if(typeof initSupabase === 'function'){
+      client = initSupabase();
+    }
+    if(!client && typeof sb !== 'undefined' && sb){
+      client = sb;
+    }
+    if(!client && window.supabase && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined'){
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return client;
+  }
+
+  function renderNav(){
+    var side = $('sideNav');
+    var mobile = $('mobileNav');
+
+    side.innerHTML = NAV.map(function(item){
+      return '<button class="snav' + (item[0] === 'overview' ? ' on' : '') +
+        '" data-view="' + item[0] + '">' + esc(item[1]) + '</button>';
+    }).join('');
+
+    mobile.innerHTML = NAV.map(function(item){
+      return '<button class="' + (item[0] === 'overview' ? 'on' : '') +
+        '" data-view="' + item[0] + '">' + esc(item[1]) + '</button>';
+    }).join('');
+
+    document.querySelectorAll('[data-view]').forEach(function(btn){
+      btn.addEventListener('click', function(){ showView(btn.dataset.view); });
+    });
+  }
+
+  async function showView(name){
+    document.querySelectorAll('.view').forEach(function(v){
+      v.classList.toggle('on', v.id === 'view-' + name);
+    });
+    document.querySelectorAll('[data-view]').forEach(function(b){
+      b.classList.toggle('on', b.dataset.view === name);
+    });
+
+    if(name === 'overview') await loadDashboard();
+    if(name === 'members') await loadMembers();
+    if(name === 'posts') await loadPosts(false);
+    if(name === 'resources') await loadPosts(true);
+    if(name === 'help') await loadHelp();
+    if(name === 'invites') await loadInvites();
+  }
+
+  async function verifyAdmin(user){
+    var q = await client
+      .from('members')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
+
+    if(q.error) throw q.error;
+    if(!q.data || q.data.role !== 'admin' || q.data.status !== 'active'){
+      throw new Error('This account does not have active admin access.');
+    }
+    return q.data;
+  }
+
+  async function openAdmin(user){
+    adminMember = await verifyAdmin(user);
+    $('adminName').textContent = adminMember.full_name || adminMember.email || 'Admin';
+    $('loginGate').hidden = true;
+    $('adminApp').hidden = false;
+    renderNav();
+    await loadDashboard();
+  }
+
+  async function boot(){
+    initClient();
+    if(!client){
+      message($('loginMessage'),'Supabase is not configured on this page.','bad');
+      return;
+    }
+
+    var s = await client.auth.getSession();
+    if(s.error){
+      message($('loginMessage'),s.error.message,'bad');
+      return;
+    }
+
+    if(s.data && s.data.session && s.data.session.user){
+      try{
+        await openAdmin(s.data.session.user);
+      }catch(err){
+        await client.auth.signOut();
+        message($('loginMessage'),err.message || 'Admin access failed.','bad');
+      }
+    }
+  }
+
+  async function signIn(){
+    var email = $('loginEmail').value.trim();
+    var password = $('loginPassword').value;
+    message($('loginMessage'),'','');
+
+    if(!email || !password){
+      message($('loginMessage'),'Enter your email and password.','bad');
+      return;
+    }
+
+    $('loginBtn').disabled = true;
+    $('loginBtn').textContent = 'Signing in…';
+
+    try{
+      var r = await client.auth.signInWithPassword({email:email,password:password});
+      if(r.error) throw r.error;
+      await openAdmin(r.data.user);
+    }catch(err){
+      message($('loginMessage'),err.message || 'Sign in failed.','bad');
+    }finally{
+      $('loginBtn').disabled = false;
+      $('loginBtn').textContent = 'Sign in';
+    }
+  }
+
+  async function signOut(){
+    await client.auth.signOut();
+    location.reload();
+  }
+
+  async function countRows(table, filterFn){
+    var q = client.from(table).select('*',{count:'exact',head:true});
+    if(filterFn) q = filterFn(q);
+    var r = await q;
+    if(r.error) throw r.error;
+    return r.count || 0;
+  }
+
+  async function loadDashboard(){
+    try{
+      var results = await Promise.all([
+        countRows('members', function(q){ return q.eq('status','active'); }),
+        countRows('posts', function(q){ return q.is('deleted_at',null); }),
+        countRows('help_requests', function(q){ return q.in('status',['new','contacted','scoping','in_progress']); })
+      ]);
+      $('statMembers').textContent = results[0];
+      $('statPosts').textContent = results[1];
+      $('statHelp').textContent = results[2];
+    }catch(err){
+      message($('pageMessage'),err.message || 'Could not load dashboard.','bad');
+    }
+  }
+
+  async function loadMembers(){
+    message($('pageMessage'),'','');
+
+    var m = await client
+      .from('members')
+      .select('*')
+      .order('created_at',{ascending:false});
+
+    if(m.error){
+      $('memberList').innerHTML = '<div class="empty">' + esc(m.error.message) + '</div>';
+      return;
+    }
+
+    var b = await client
+      .from('businesses')
+      .select('*')
+      .order('is_primary',{ascending:false});
+
+    if(b.error){
+      $('memberList').innerHTML = '<div class="empty">' + esc(b.error.message) + '</div>';
+      return;
+    }
+
+    membersCache = m.data || [];
+    businessesCache = b.data || [];
+    renderMembers();
+  }
+
+  function primaryBusiness(memberId){
+    return businessesCache.find(function(b){ return b.member_id === memberId && b.is_primary; }) ||
+           businessesCache.find(function(b){ return b.member_id === memberId; }) || null;
+  }
+
+  function renderMembers(){
+    var query = $('memberSearch').value.trim().toLowerCase();
+    var status = $('memberStatus').value;
+
+    var rows = membersCache.filter(function(m){
+      var b = primaryBusiness(m.id);
+      var hay = [
+        m.full_name,m.email,m.headline,
+        b && b.name,b && b.trade,b && b.city
+      ].join(' ').toLowerCase();
+
+      return (!query || hay.indexOf(query) !== -1) &&
+             (!status || m.status === status);
+    });
+
+    if(!rows.length){
+      $('memberList').innerHTML = '<div class="empty">No members match this view.</div>';
+      return;
+    }
+
+    $('memberList').innerHTML = rows.map(function(m){
+      var b = primaryBusiness(m.id);
+      var thumb = m.profile_photo_url
+        ? '<div class="thumb"><img src="' + esc(m.profile_photo_url) + '" alt=""></div>'
+        : '<div class="thumb">' + esc(initials(m.full_name)) + '</div>';
+
+      var role = m.role === 'admin' ? '<span class="chip admin">Admin</span>' : '';
+      var stat = '<span class="chip ' + (m.status === 'active' ? 'active' : '') + '">' + esc(m.status) + '</span>';
+
+      return '<div class="row">' +
+        thumb +
+        '<div class="rd">' +
+          '<div class="rt">' + esc(m.full_name || 'Unnamed member') + '</div>' +
+          '<div class="rs">' +
+            esc((b && b.name) || m.email || 'No business yet') +
+            ((b && (b.trade || b.city)) ? ' · ' + esc([b.trade,b.city].filter(Boolean).join(' · ')) : '') +
+          '</div>' +
+          '<div class="ra">' + stat + role +
+            '<button class="mini dark" data-edit-member="' + esc(m.id) + '">Edit</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    document.querySelectorAll('[data-edit-member]').forEach(function(btn){
+      btn.addEventListener('click', function(){ openExistingMember(btn.dataset.editMember); });
+    });
+  }
+
+  function resetEditor(){
+    selectedMember = null;
+    selectedBusiness = null;
+
+    [
+      'memberId','businessId','fullName','memberEmail','headline','bio','lookingFor',
+      'businessName','trade','city','brandColor','whatTheyDo','helpsWith',
+      'memberPhone','businessPhone','businessEmail','website','instagram','linkedin'
+    ].forEach(function(id){ $(id).value = ''; });
+
+    $('showEmail').checked = false;
+    $('showPhone').checked = true;
+    $('showSocials').checked = true;
+
+    ['profilePhoto','businessLogo','businessBanner'].forEach(function(id){ $(id).value = ''; });
+
+    ['profilePreview','logoPreview','bannerPreview'].forEach(function(id){
+      $(id).src = '';
+      $(id).classList.remove('on');
+    });
+
+    $('createInviteBtn').style.display = 'none';
+    $('createInviteBtn').disabled = false;
+    $('createInviteBtn').textContent = 'Create invite';
+    $('editorTitle').textContent = 'Add member';
+    $('editorEyebrow').textContent = 'Member';
+    message($('editorMessage'),'','');
+  }
+
+  function openNewMember(){
+    resetEditor();
+    openDrawer();
+  }
+
+  function openExistingMember(memberId){
+    resetEditor();
+
+    var m = membersCache.find(function(x){ return x.id === memberId; });
+    if(!m) return;
+    var b = primaryBusiness(memberId);
+
+    selectedMember = m;
+    selectedBusiness = b;
+
+    $('memberId').value = m.id || '';
+    $('businessId').value = b ? b.id : '';
+    $('fullName').value = m.full_name || '';
+    $('memberEmail').value = m.email || '';
+    $('headline').value = m.headline || '';
+    $('bio').value = m.bio || '';
+    $('lookingFor').value = m.looking_for || '';
+    $('memberPhone').value = m.phone || '';
+    $('instagram').value = m.instagram_url || '';
+    $('linkedin').value = m.linkedin_url || '';
+    $('showEmail').checked = !!m.show_email;
+    $('showPhone').checked = m.show_phone !== false;
+    $('showSocials').checked = m.show_socials !== false;
+
+    if(b){
+      $('businessName').value = b.name || '';
+      $('trade').value = b.trade || '';
+      $('city').value = b.city || '';
+      $('brandColor').value = b.brand_color || '';
+      $('whatTheyDo').value = b.what_they_do || '';
+      $('helpsWith').value = b.helps_with || '';
+      $('businessPhone').value = b.contact_phone || '';
+      $('businessEmail').value = b.contact_email || '';
+      $('website').value = b.website || '';
+    }
+
+    setPreview('profilePreview',m.profile_photo_url);
+    setPreview('logoPreview',b && b.logo_url);
+    setPreview('bannerPreview',b && b.banner_url);
+
+    $('editorTitle').textContent = m.full_name || 'Edit member';
+    $('editorEyebrow').textContent = (m.status || 'member') + ' member';
+
+    if(m.role !== 'admin' && m.status !== 'active'){
+      $('createInviteBtn').style.display = 'inline-flex';
+    }
+
+    openDrawer();
+  }
+
+  function setPreview(id,url){
+    var img = $(id);
+    if(url){
+      img.src = url;
+      img.classList.add('on');
+    }else{
+      img.src = '';
+      img.classList.remove('on');
+    }
+  }
+
+  function openDrawer(){
+    $('scrim').classList.add('on');
+    $('memberDrawer').classList.add('on');
+  }
+
+  function closeDrawer(){
+    $('scrim').classList.remove('on');
+    $('memberDrawer').classList.remove('on');
+  }
+
+  async function uploadImage(file, memberId, kind){
+    if(!file) return null;
+
+    if(file.size > 5 * 1024 * 1024){
+      throw new Error('Images must be 5 MB or smaller.');
+    }
+
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+    var path = memberId + '/' + kind + '-' + Date.now() + '.' + ext;
+
+    var up = await client.storage
+      .from('member-media')
+      .upload(path,file,{cacheControl:'3600',upsert:false});
+
+    if(up.error) throw up.error;
+
+    var pub = client.storage.from('member-media').getPublicUrl(path);
+    return pub.data.publicUrl;
+  }
+
+  async function saveMember(){
+    message($('editorMessage'),'','');
+
+    var fullName = $('fullName').value.trim();
+    var email = $('memberEmail').value.trim() || null;
+
+    if(!fullName){
+      message($('editorMessage'),'Full name is required.','bad');
+      return;
+    }
+
+    $('saveMemberBtn').disabled = true;
+    $('saveMemberBtn').textContent = 'Saving…';
+
+    try{
+      var memberId = $('memberId').value || null;
+      var businessId = $('businessId').value || null;
+
+      var memberPayload = {
+        full_name: fullName,
+        email: email,
+        headline: $('headline').value.trim() || null,
+        bio: $('bio').value.trim() || null,
+        looking_for: $('lookingFor').value.trim() || null,
+        phone: $('memberPhone').value.trim() || null,
+        instagram_url: $('instagram').value.trim() || null,
+        linkedin_url: $('linkedin').value.trim() || null,
+        show_email: $('showEmail').checked,
+        show_phone: $('showPhone').checked,
+        show_socials: $('showSocials').checked
+      };
+
+      if(memberId){
+        var mu = await client.from('members').update(memberPayload).eq('id',memberId).select('*').single();
+        if(mu.error) throw mu.error;
+      }else{
+        memberPayload.role = 'member';
+        memberPayload.status = 'draft';
+
+        var mi = await client.from('members').insert(memberPayload).select('*').single();
+        if(mi.error) throw mi.error;
+        memberId = mi.data.id;
+        $('memberId').value = memberId;
+      }
+
+      var businessName = $('businessName').value.trim();
+      var businessPayload = {
+        member_id: memberId,
+        name: businessName,
+        trade: $('trade').value.trim() || null,
+        city: $('city').value.trim() || null,
+        brand_color: $('brandColor').value.trim() || '#111111',
+        what_they_do: $('whatTheyDo').value.trim() || null,
+        helps_with: $('helpsWith').value.trim() || null,
+        contact_phone: $('businessPhone').value.trim() || null,
+        contact_email: $('businessEmail').value.trim() || null,
+        website: $('website').value.trim() || null,
+        is_primary: true
+      };
+
+      if(businessName){
+        if(businessId){
+          var bu = await client.from('businesses').update(businessPayload).eq('id',businessId).select('*').single();
+          if(bu.error) throw bu.error;
+        }else{
+          businessPayload.status = 'draft';
+          var bi = await client.from('businesses').insert(businessPayload).select('*').single();
+          if(bi.error) throw bi.error;
+          businessId = bi.data.id;
+          $('businessId').value = businessId;
+        }
+      }
+
+      var profileUrl = await uploadImage($('profilePhoto').files[0],memberId,'profile');
+      var logoUrl = await uploadImage($('businessLogo').files[0],memberId,'logo');
+      var bannerUrl = await uploadImage($('businessBanner').files[0],memberId,'banner');
+
+      if(profileUrl){
+        var mp = await client.from('members').update({profile_photo_url:profileUrl}).eq('id',memberId);
+        if(mp.error) throw mp.error;
+      }
+
+      if(businessId && (logoUrl || bannerUrl)){
+        var imageUpdate = {};
+        if(logoUrl) imageUpdate.logo_url = logoUrl;
+        if(bannerUrl) imageUpdate.banner_url = bannerUrl;
+
+        var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId);
+        if(bp.error) throw bp.error;
+      }
+
+      message($('editorMessage'),'Member saved.','good');
+      await loadMembers();
+      openExistingMember(memberId);
+
+    }catch(err){
+      message($('editorMessage'),err.message || 'Could not save member.','bad');
+    }finally{
+      $('saveMemberBtn').disabled = false;
+      $('saveMemberBtn').textContent = 'Save member';
+    }
+  }
+
+  async function createInvite(){
+    var memberId = $('memberId').value;
+    if(!memberId){
+      message($('editorMessage'),'Save the member first.','bad');
+      return;
+    }
+
+    $('createInviteBtn').disabled = true;
+    $('createInviteBtn').textContent = 'Creating…';
+
+    try{
+      var r = await client.rpc('create_member_invite',{p_member_id:memberId});
+      if(r.error) throw r.error;
+
+      var code = r.data;
+      var link = location.origin + '/signup.html?invite=' + encodeURIComponent(code);
+
+      try{
+        await navigator.clipboard.writeText(link);
+        message($('editorMessage'),'Invite created and link copied: ' + code,'good');
+      }catch(e){
+        message($('editorMessage'),'Invite created: ' + link,'good');
+      }
+
+      await loadMembers();
+      await loadInvites();
+
+    }catch(err){
+      message($('editorMessage'),err.message || 'Could not create invite.','bad');
+      $('createInviteBtn').disabled = false;
+    }finally{
+      $('createInviteBtn').textContent = 'Create invite';
+    }
+  }
+
+  async function loadPosts(resourcesOnly){
+    var target = resourcesOnly ? $('resourceList') : $('postList');
+
+    var q = client
+      .from('posts')
+      .select('id,category,subtype,body,status,is_pinned,created_at,deleted_at,author_member_id')
+      .is('deleted_at',null)
+      .order('created_at',{ascending:false})
+      .limit(100);
+
+    if(resourcesOnly) q = q.eq('category','resource');
+
+    var r = await q;
+    if(r.error){
+      target.innerHTML = '<div class="empty">' + esc(r.error.message) + '</div>';
+      return;
+    }
+
+    var rows = r.data || [];
+    if(!rows.length){
+      target.innerHTML = '<div class="empty">' +
+        (resourcesOnly ? 'No resources yet.' : 'No posts yet.') +
+        '</div>';
+      return;
+    }
+
+    target.innerHTML = rows.map(function(p){
+      return '<div class="row">' +
+        '<div class="rd">' +
+          '<div class="rt">' + esc(p.category) + (p.is_pinned ? ' · Pinned' : '') + '</div>' +
+          '<div class="rs">' + esc(p.body) + '</div>' +
+          '<div class="ra">' +
+            '<span class="chip">' + esc(p.status) + '</span>' +
+            '<span class="tiny">' + esc(fmtDate(p.created_at)) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function loadHelp(){
+    var status = $('helpStatus').value;
+
+    var q = client
+      .from('help_requests')
+      .select('*')
+      .order('created_at',{ascending:false});
+
+    if(status) q = q.eq('status',status);
+
+    var r = await q;
+    if(r.error){
+      $('helpList').innerHTML = '<div class="empty">' + esc(r.error.message) + '</div>';
+      return;
+    }
+
+    var rows = r.data || [];
+    if(!rows.length){
+      $('helpList').innerHTML = '<div class="empty">No help requests in this view.</div>';
+      return;
+    }
+
+    var ids = Array.from(new Set(rows.map(function(x){ return x.requester_member_id; }).filter(Boolean)));
+    var memberMap = {};
+
+    if(ids.length){
+      var mr = await client.from('members').select('id,full_name,email').in('id',ids);
+      if(!mr.error){
+        (mr.data || []).forEach(function(m){ memberMap[m.id] = m; });
+      }
+    }
+
+    $('helpList').innerHTML = rows.map(function(h){
+      var m = memberMap[h.requester_member_id] || {};
+      return '<div class="row">' +
+        '<div class="rd">' +
+          '<div class="rt">' + esc(m.full_name || m.email || 'Member') + '</div>' +
+          '<div class="rs"><strong>Need:</strong> ' + esc(h.need || '—') + '</div>' +
+          (h.desired_outcome ? '<div class="rs"><strong>Desired result:</strong> ' + esc(h.desired_outcome) + '</div>' : '') +
+          (h.notes ? '<div class="rs"><strong>Notes:</strong> ' + esc(h.notes) + '</div>' : '') +
+          '<div class="ra">' +
+            '<span class="chip ' + (h.status === 'new' ? 'active' : '') + '">' + esc(h.status) + '</span>' +
+            '<span class="tiny">' + esc(fmtDate(h.created_at)) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function loadInvites(){
+    var r = await client
+      .from('invites')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(100);
+
+    if(r.error){
+      $('inviteList').innerHTML = '<div class="empty">' + esc(r.error.message) + '</div>';
+      return;
+    }
+
+    var rows = r.data || [];
+    if(!rows.length){
+      $('inviteList').innerHTML = '<div class="empty">No invites yet.</div>';
+      return;
+    }
+
+    $('inviteList').innerHTML = rows.map(function(iv){
+      var state = iv.revoked ? 'Revoked' : (iv.redeemed_at ? 'Redeemed' : 'Open');
+      var link = location.origin + '/signup.html?invite=' + encodeURIComponent(iv.code);
+
+      return '<div class="row">' +
+        '<div class="rd">' +
+          '<div class="rt code">' + esc(iv.code) + '</div>' +
+          '<div class="rs">' + esc(iv.email || 'No email lock') + ' · ' + esc(state) + '</div>' +
+          '<div class="rs">Created ' + esc(fmtDate(iv.created_at)) +
+            (iv.expires_at ? ' · Expires ' + esc(fmtDate(iv.expires_at)) : '') +
+          '</div>' +
+          '<div class="ra">' +
+            (!iv.revoked && !iv.redeemed_at
+              ? '<button class="mini yellow" data-copy-invite="' + esc(link) + '">Copy link</button>'
+              : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    document.querySelectorAll('[data-copy-invite]').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        var link = btn.dataset.copyInvite;
+        try{
+          await navigator.clipboard.writeText(link);
+          btn.textContent = 'Copied';
+          setTimeout(function(){ btn.textContent = 'Copy link'; },1200);
+        }catch(e){
+          prompt('Copy this invite link:',link);
+        }
+      });
+    });
+  }
+
+  function bindPreview(inputId,previewId){
+    $(inputId).addEventListener('change',function(){
+      var f = this.files && this.files[0];
+      if(!f) return;
+      var url = URL.createObjectURL(f);
+      setPreview(previewId,url);
+    });
+  }
+
+  /* ---------- EVENTS ---------- */
+  $('loginBtn').addEventListener('click',signIn);
+  $('loginPassword').addEventListener('keydown',function(e){ if(e.key === 'Enter') signIn(); });
+  $('logoutBtn').addEventListener('click',signOut);
+
+  $('addMemberBtn').addEventListener('click',openNewMember);
+  $('closeEditorBtn').addEventListener('click',closeDrawer);
+  $('scrim').addEventListener('click',closeDrawer);
+  $('saveMemberBtn').addEventListener('click',saveMember);
+  $('createInviteBtn').addEventListener('click',createInvite);
+
+  $('memberSearch').addEventListener('input',renderMembers);
+  $('memberStatus').addEventListener('change',renderMembers);
+  $('helpStatus').addEventListener('change',loadHelp);
+
+  bindPreview('profilePhoto','profilePreview');
+  bindPreview('businessLogo','logoPreview');
+  bindPreview('businessBanner','bannerPreview');
+
+  boot();
+})();
+</script>
 </body>
 </html>

@@ -5,6 +5,18 @@
 <meta name="theme-color" content="#111111"><title>Home · seek+scale.</title>
 <link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+<style>
+.featured-card{border:1.5px solid #111;border-radius:20px;overflow:hidden;margin-bottom:18px;background:#fff}
+.featured-band{height:7px;background:#FFD700}
+.featured-inside{padding:17px}
+.featured-label{display:inline-flex;background:#111;color:#fff;border-radius:999px;padding:5px 9px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:13px}
+.featured-main{display:flex;gap:12px;align-items:flex-start}
+.featured-copy{flex:1;min-width:0}
+.featured-name{font-size:18px;font-weight:820;letter-spacing:-.015em}
+.featured-biz{font-size:13px;color:#5F5F5F;margin-top:3px}
+.featured-help{margin-top:13px;padding-top:12px;border-top:1px solid #EDEDED;font-size:14px;line-height:1.48}
+.featured-actions{display:flex;align-items:center;justify-content:flex-end;margin-top:13px}
+</style>
 </head><body>
 <header class="top" id="top"></header>
 <div class="shell">
@@ -12,6 +24,10 @@
   <main>
     <h1>The room</h1>
     <p class="sub">Ask. Share. Help somebody move forward.</p>
+
+    <div id="featuredSection" hidden>
+      <div id="featuredMember"></div>
+    </div>
 
     <div class="card composer">
       <textarea id="postBody" placeholder="Share something with the room..." maxlength="4000"></textarea>
@@ -59,8 +75,58 @@
       btn.textContent='Post';
       if(r.error){msg.textContent=r.error.message;msg.className='message bad';btn.disabled=false;return;}
       body.value='';body.style.height='auto';msg.textContent='Posted.';msg.className='message good';
-      await loadFeed();
+      await loadFeatured();
+    await loadFeed();
     });
+
+    async function loadFeatured(){
+      var r=await SS.client.from('members')
+        .select('id,featured_kind,featured_starts_at,featured_ends_at,updated_at')
+        .eq('status','active')
+        .not('featured_kind','is',null)
+        .order('updated_at',{ascending:false})
+        .limit(10);
+
+      if(r.error)throw r.error;
+
+      var now=Date.now();
+      var row=(r.data||[]).find(function(x){
+        var starts=!x.featured_starts_at||new Date(x.featured_starts_at).getTime()<=now;
+        var ends=!x.featured_ends_at||new Date(x.featured_ends_at).getTime()>now;
+        return starts&&ends;
+      });
+
+      if(!row){
+        SS.$('featuredSection').hidden=true;
+        return;
+      }
+
+      var item=await SS.getMember(row.id);
+      if(!item){
+        SS.$('featuredSection').hidden=true;
+        return;
+      }
+
+      var m=item.member,b=item.business||{};
+      var label=row.featured_kind==='sponsored'?'Sponsored Member':'Featured Member';
+      var help=b.helps_with||'';
+      SS.$('featuredMember').innerHTML=
+        '<article class="featured-card">'+
+          '<div class="featured-band"></div>'+
+          '<div class="featured-inside">'+
+            '<div class="featured-label">'+SS.esc(label)+'</div>'+
+            '<div class="featured-main">'+SS.avatar(m)+
+              '<div class="featured-copy">'+
+                '<div class="featured-name">'+SS.esc(m.full_name)+'</div>'+
+                '<div class="featured-biz">'+SS.esc([b.name,b.trade,b.city].filter(Boolean).join(' · '))+'</div>'+
+              '</div>'+
+            '</div>'+
+            (help?'<div class="featured-help"><div class="qa-label">How they can help the room</div>'+SS.esc(help)+'</div>':'')+
+            '<div class="featured-actions"><a class="act solid" href="shop.html?id='+encodeURIComponent(m.id)+'">View member</a></div>'+
+          '</div>'+
+        '</article>';
+      SS.$('featuredSection').hidden=false;
+    }
 
     async function loadFeed(){
       var posts=await SS.loadPosts(['discussion','question','win','announcement','opportunity'],60);
@@ -80,7 +146,7 @@
           '<div class="post-head">'+SS.avatar(m)+
             '<div class="post-meta"><div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
             '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div></div>'+
-            '<span class="chip '+(p.category==='announcement'?'yellow':'')+'">'+SS.esc(p.category)+'</span>'+
+            '<span class="chip '+((p.category==='announcement'||p.subtype==='introduction')?'yellow':'')+'">'+SS.esc(p.subtype==='introduction'?'New member':p.category)+'</span>'+
           '</div>'+
           '<div class="post-body">'+SS.esc(p.body)+'</div>'+
           '<div class="post-tools"><span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+

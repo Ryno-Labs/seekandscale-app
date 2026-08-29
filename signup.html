@@ -14,8 +14,8 @@
 
   <div id="form">
     <div class="card flat" style="margin-bottom:20px">
-      <strong>Your member profile is already set up.</strong>
-      <div class="tiny" style="margin-top:5px">Use the email tied to your invitation and create your password.</div>
+      <strong>You've been invited into the room.</strong>
+      <div class="tiny" style="margin-top:5px">Create your account first. Then you'll build your member profile in about 60 seconds.</div>
     </div>
 
     <div class="field"><label for="code">Invite code</label><input id="code" placeholder="SS-XXXXXXXX" autocapitalize="characters" autocomplete="off"></div>
@@ -37,8 +37,8 @@
   <div id="done" hidden>
     <div class="card flat" style="text-align:center;padding:26px 18px">
       <h3>You're in.</h3>
-      <p class="tiny" id="doneText">Your account is set up and your invitation is active.</p>
-      <a class="btn wide" href="home.html">Go to the app</a>
+      <p class="tiny" id="doneText">Your account is active. Build your profile to enter the room.</p>
+      <a class="btn wide" href="onboarding.html">Build my profile</a>
     </div>
   </div>
 </div>
@@ -58,7 +58,7 @@
     var r=await client.rpc('claim_member_invite',{p_code:c});
     if(r.error)throw r.error;
     if(r.data&&r.data.ok===false)throw new Error(r.data.error||'This invitation could not be activated.');
-    form.hidden=true;confirmBox.hidden=true;done.hidden=false;
+    location.replace('onboarding.html');
   }
 
   async function create(){

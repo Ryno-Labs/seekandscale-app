@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Set up your profile · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=growth1">
+<style>
+  .onboard-wrap{width:min(560px,calc(100% - 30px));margin:0 auto;padding:42px 0 70px}
+  .stepbar{height:6px;background:#EDEDED;border-radius:999px;overflow:hidden;margin:18px 0 26px}
+  .stepbar span{display:block;height:100%;width:50%;background:#FFD700;border-radius:999px}
+  .stepbar.done span{width:100%}
+  .onboard-card{background:#fff;border:1.5px solid #E4E4E4;border-radius:20px;padding:20px;margin-bottom:14px}
+  .photo-row{display:flex;align-items:center;gap:14px}
+  .photo-preview{width:76px;height:76px;border-radius:20px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;overflow:hidden;flex:none}
+  .photo-preview img{width:100%;height:100%;object-fit:cover}
+  .intro-box{width:100%;min-height:190px;border:1.5px solid #E4E4E4;border-radius:16px;padding:14px;resize:vertical;font:inherit;line-height:1.5;outline:none}
+  .intro-box:focus{border-color:#111}
+  .skip{display:block;text-align:center;margin-top:14px;font-size:13px;color:#5F5F5F;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="onboard-wrap">
+  <a class="logo" href="index.html">seek<i>+</i><br>scale.</a>
+
+  <div id="profileStep">
+    <div class="eyebrow" style="margin-top:30px">Step 1 of 2</div>
+    <h1 style="margin-top:7px">Build your member profile.</h1>
+    <p class="sub">Keep it simple. This is what other owners will see when they find you.</p>
+    <div class="stepbar"><span></span></div>
+
+    <div class="onboard-card">
+      <div class="photo-row">
+        <div class="photo-preview" id="photoPreview">SS</div>
+        <div style="flex:1">
+          <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <button class="act solid" id="photoBtn" type="button">Add profile picture</button>
+          <div class="tiny" style="margin-top:7px">Optional · JPG, PNG or WebP · up to 5 MB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="onboard-card">
+      <div class="field">
+        <label for="fullName">Your name</label>
+        <input id="fullName" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="businessName">Business name</label>
+        <input id="businessName" autocomplete="organization">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="trade">Trade / service</label>
+          <input id="trade" placeholder="Plumbing">
+        </div>
+        <div class="field">
+          <label for="city">City</label>
+          <input id="city" placeholder="Georgetown">
+        </div>
+      </div>
+      <div class="field">
+        <label for="whatTheyDo">What does your business do?</label>
+        <textarea id="whatTheyDo" placeholder="Keep it plain. What do customers hire you for?"></textarea>
+      </div>
+      <div class="field">
+        <label for="helpsWith">How can you help someone in this room?</label>
+        <textarea id="helpsWith" placeholder="What should another owner know they can call you about?"></textarea>
+      </div>
+      <button class="btn wide" id="continueBtn" type="button">Continue</button>
+      <div class="message" id="profileMsg" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div id="introStep" hidden>
+    <div class="eyebrow" style="margin-top:30px">Step 2 of 2</div>
+    <h1 style="margin-top:7px">Say hello to the room.</h1>
+    <p class="sub">We made a quick introduction from your profile. Change anything you want.</p>
+    <div class="stepbar done"><span></span></div>
+
+    <div class="onboard-card">
+      <div class="eyebrow">Your introduction</div>
+      <textarea class="intro-box" id="introBody" maxlength="4000"></textarea>
+      <button class="btn wide" id="postIntroBtn" type="button" style="margin-top:14px">Post introduction &amp; enter the room</button>
+      <button class="act" id="skipIntroBtn" type="button" style="width:100%;justify-content:center;margin-top:8px">Enter without posting</button>
+      <div class="message" id="introMsg" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=community-v1"></script>
+<script>
+(function(){
+  'use strict';
+
+  var client=null,session=null,member=null,business=null,photoFile=null,photoUrl=null;
+
+  function $(id){return document.getElementById(id);}
+  function show(id,text,bad){
+    var el=$(id);
+    el.textContent=text||'';
+    el.className='message'+(text?' '+(bad?'bad':'good'):'');
+  }
+  function initials(name){
+    var p=String(name||'').trim().split(/\s+/).filter(Boolean);
+    return ((p[0]&&p[0][0])||'S')+((p.length>1&&p[p.length-1][0])||'S');
+  }
+  function sentence(value){
+    var s=String(value||'').trim();
+    if(!s)return '';
+    return /[.!?]$/.test(s)?s:s+'.';
+  }
+  function firstName(name){
+    return (String(name||'').trim().split(/\s+/)[0]||'there');
+  }
+  function renderPhoto(url){
+    var el=$('photoPreview');
+    if(url){
+      el.innerHTML='<img src="'+String(url).replace(/"/g,'&quot;')+'" alt="">';
+    }else{
+      el.textContent=initials($('fullName').value||member&&member.full_name).toUpperCase();
+    }
+  }
+  function makeIntro(){
+    var name=$('fullName').value.trim();
+    var biz=$('businessName').value.trim();
+    var city=$('city').value.trim();
+    var what=$('whatTheyDo').value.trim();
+    var helps=$('helpsWith').value.trim();
+
+    var intro="Hi, I'm "+firstName(name)+" with "+biz+(city?" in "+city:"")+".";
+    intro+="\n\n"+sentence(what);
+    intro+="\n\nI can help other members with "+sentence(helps).replace(/^[A-Z]/,function(c){return c.toLowerCase();});
+    return intro;
+  }
+
+  async function load(){
+    client=initSupabase();
+    if(!client)throw new Error('The app connection did not start.');
+
+    var sr=await client.auth.getSession();
+    if(sr.error)throw sr.error;
+    session=sr.data&&sr.data.session;
+    if(!session){
+      location.replace('index.html');
+      return;
+    }
+
+    var mr=await client.from('members').select('*').eq('auth_user_id',session.user.id).maybeSingle();
+    if(mr.error)throw mr.error;
+    member=mr.data;
+
+    if(!member||member.status!=='active'){
+      location.replace('index.html?state=inactive');
+      return;
+    }
+
+    if(member.role==='admin'||member.onboarding_complete===true){
+      location.replace('home.html');
+      return;
+    }
+
+    var br=await client.from('businesses')
+      .select('*')
+      .eq('member_id',member.id)
+      .order('is_primary',{ascending:false})
+      .order('created_at',{ascending:true})
+      .limit(1);
+    if(br.error)throw br.error;
+    business=br.data&&br.data[0]?br.data[0]:null;
+
+    $('fullName').value=member.full_name||'';
+    if(business){
+      $('businessName').value=business.name||'';
+      $('trade').value=business.trade||'';
+      $('city').value=business.city||'';
+      $('whatTheyDo').value=business.what_they_do||'';
+      $('helpsWith').value=business.helps_with||'';
+    }
+    photoUrl=member.profile_photo_url||null;
+    renderPhoto(photoUrl);
+  }
+
+  $('photoBtn').addEventListener('click',function(){$('photoInput').click();});
+  $('photoInput').addEventListener('change',function(){
+    var f=this.files&&this.files[0];
+    if(!f)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(f.type)){
+      show('profileMsg','Use a JPG, PNG or WebP image.',true);this.value='';return;
+    }
+    if(f.size>5*1024*1024){
+      show('profileMsg','That image is larger than 5 MB.',true);this.value='';return;
+    }
+    photoFile=f;
+    renderPhoto(URL.createObjectURL(f));
+  });
+  $('fullName').addEventListener('input',function(){if(!photoFile&&!photoUrl)renderPhoto(null);});
+
+  $('continueBtn').addEventListener('click',async function(){
+    var values={
+      p_full_name:$('fullName').value.trim(),
+      p_business_name:$('businessName').value.trim(),
+      p_trade:$('trade').value.trim(),
+      p_city:$('city').value.trim(),
+      p_what_they_do:$('whatTheyDo').value.trim(),
+      p_helps_with:$('helpsWith').value.trim()
+    };
+
+    if(Object.keys(values).some(function(k){return !values[k];})){
+      show('profileMsg','Fill in each profile field so other owners know who you are and how you can help.',true);
+      return;
+    }
+
+    var btn=$('continueBtn');
+    btn.disabled=true;btn.textContent='Saving…';show('profileMsg','',false);
+
+    try{
+      if(photoFile){
+        var ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[photoFile.type];
+        var path=member.id+'/profile-'+Date.now()+'.'+ext;
+        var up=await client.storage.from('member-media').upload(path,photoFile,{
+          cacheControl:'3600',upsert:false,contentType:photoFile.type
+        });
+        if(up.error)throw up.error;
+        var pub=client.storage.from('member-media').getPublicUrl(path);
+        photoUrl=pub.data&&pub.data.publicUrl;
+        if(!photoUrl)throw new Error('Could not create the photo URL.');
+        var pr=await client.rpc('update_my_profile_photo',{p_profile_photo_url:photoUrl});
+        if(pr.error)throw pr.error;
+      }
+
+      var r=await client.rpc('save_my_onboarding',values);
+      if(r.error)throw r.error;
+
+      $('introBody').value=makeIntro();
+      $('profileStep').hidden=true;
+      $('introStep').hidden=false;
+      window.scrollTo(0,0);
+    }catch(e){
+      show('profileMsg',e.message||'Could not save your profile.',true);
+    }finally{
+      btn.disabled=false;btn.textContent='Continue';
+    }
+  });
+
+  async function finish(postIt){
+    var btn=postIt?$('postIntroBtn'):$('skipIntroBtn');
+    btn.disabled=true;
+    if(postIt)btn.textContent='Posting…';
+    show('introMsg','',false);
+
+    try{
+      var body=postIt?$('introBody').value.trim():'';
+      if(postIt&&body.length<4)throw new Error('Write a short introduction first.');
+
+      var r=await client.rpc('finish_my_onboarding',{p_intro_body:body||null});
+      if(r.error)throw r.error;
+      location.replace('home.html?welcome=1');
+    }catch(e){
+      show('introMsg',e.message||'Could not finish onboarding.',true);
+      btn.disabled=false;
+      if(postIt)btn.textContent='Post introduction & enter the room';
+    }
+  }
+
+  $('postIntroBtn').addEventListener('click',function(){finish(true);});
+  $('skipIntroBtn').addEventListener('click',function(){finish(false);});
+
+  load().catch(function(e){
+    show('profileMsg',e.message||'Could not load onboarding.',true);
+  });
+})();
+</script>
+</body>
+</html>

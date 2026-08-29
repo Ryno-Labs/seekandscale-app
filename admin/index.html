@@ -629,7 +629,25 @@ h2{
             <h1>Members</h1>
             <p class="sub">Build the profile first. Invite the owner when you are ready.</p>
           </div>
-          <button class="btn sm" id="addMemberBtn">Add member</button>
+          <button class="btn sm" id="addMemberBtn">Quick invite</button>
+        </div>
+
+        <div class="card yellow" id="quickInviteCard" hidden>
+          <div class="eyebrow">Quick invite</div>
+          <h3 style="margin:7px 0 5px">Invite an owner. Let them build the profile.</h3>
+          <p class="tiny" style="margin:0 0 14px">You only need their name and the email they want to use for Seek &amp; Scale.</p>
+          <div class="grid2">
+            <div class="field">
+              <label for="quickName">Owner name</label>
+              <input id="quickName" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="quickEmail">Login email</label>
+              <input id="quickEmail" type="email" autocomplete="off">
+            </div>
+          </div>
+          <button class="btn sm" id="quickInviteBtn">Create invite link</button>
+          <div id="quickInviteMessage" class="message" style="margin-top:12px"></div>
         </div>
 
         <div class="toolbar">
@@ -815,6 +833,32 @@ h2{
     <label><input type="checkbox" id="showSocials" checked> Show socials</label>
   </div>
 
+  <div id="placementSection" hidden>
+    <h2>Featured placement</h2>
+    <div class="card flat" style="padding:14px">
+      <div class="grid2">
+        <div class="field">
+          <label for="featureKind">Home placement</label>
+          <select id="featureKind">
+            <option value="">Not featured</option>
+            <option value="featured">Featured Member</option>
+            <option value="sponsored">Sponsored Member</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="featureStarts">Starts (optional)</label>
+          <input id="featureStarts" type="datetime-local">
+        </div>
+        <div class="field">
+          <label for="featureEnds">Ends (optional)</label>
+          <input id="featureEnds" type="datetime-local">
+        </div>
+      </div>
+      <button class="btn ghost sm" id="savePlacementBtn" type="button">Save placement</button>
+      <div class="tiny" style="margin-top:9px">There is one premium slot at the top of Home. Choosing a new member replaces the current one.</div>
+    </div>
+  </div>
+
   <h2>Brand &amp; images</h2>
 
   <div class="filebox">
@@ -835,8 +879,10 @@ h2{
     <img id="bannerPreview" class="preview" alt="">
   </div>
 
-  <div class="dfoot">
-    <button class="btn ghost sm" id="createInviteBtn" style="display:none">Create invite</button>
+  <div class="dfoot" style="gap:8px;flex-wrap:wrap">
+    <button class="btn ghost sm" id="deleteMemberBtn" style="display:none;color:#8B1E17">Delete member</button>
+    <button class="btn ghost sm" id="memberAccessBtn" style="display:none">Remove from community</button>
+    <button class="btn ghost sm" id="createInviteBtn" style="display:none">Create / reissue invite</button>
     <button class="btn sm" id="saveMemberBtn" style="margin-left:auto">Save member</button>
   </div>
 </div>
@@ -892,6 +938,20 @@ h2{
     try{
       return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));
     }catch(e){ return v; }
+  }
+
+  function toLocalInput(v){
+    if(!v) return '';
+    var d = new Date(v);
+    if(isNaN(d.getTime())) return '';
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+
+  function toIsoOrNull(v){
+    if(!v) return null;
+    var d = new Date(v);
+    return isNaN(d.getTime()) ? null : d.toISOString();
   }
 
   function message(el, text, type){
@@ -1119,6 +1179,21 @@ h2{
 
       var role = m.role === 'admin' ? '<span class="chip admin">Admin</span>' : '';
       var stat = '<span class="chip ' + (m.status === 'active' ? 'active' : '') + '">' + esc(m.status) + '</span>';
+      var setup = (m.status === 'active' && m.role !== 'admin' && m.onboarding_complete === false)
+        ? '<span class="chip">Needs setup</span>' : '';
+      var featured = m.featured_kind
+        ? '<span class="chip active">' + esc(m.featured_kind === 'sponsored' ? 'Sponsored' : 'Featured') + '</span>' : '';
+
+      var controls = '<button class="mini dark" data-edit-member="' + esc(m.id) + '">Edit</button>';
+      if(m.role !== 'admin' && (m.status === 'draft' || m.status === 'invited') && !m.auth_user_id){
+        controls += '<button class="mini" data-delete-member="' + esc(m.id) + '">Delete</button>';
+      }
+      if(m.role !== 'admin' && m.status === 'active'){
+        controls += '<button class="mini" data-access-member="' + esc(m.id) + '" data-next-status="suspended">Remove</button>';
+      }
+      if(m.role !== 'admin' && m.status === 'suspended'){
+        controls += '<button class="mini yellow" data-access-member="' + esc(m.id) + '" data-next-status="active">Restore</button>';
+      }
 
       return '<div class="row">' +
         thumb +
@@ -1128,8 +1203,7 @@ h2{
             esc((b && b.name) || m.email || 'No business yet') +
             ((b && (b.trade || b.city)) ? ' · ' + esc([b.trade,b.city].filter(Boolean).join(' · ')) : '') +
           '</div>' +
-          '<div class="ra">' + stat + role +
-            '<button class="mini dark" data-edit-member="' + esc(m.id) + '">Edit</button>' +
+          '<div class="ra">' + stat + role + setup + featured + controls +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1137,6 +1211,12 @@ h2{
 
     document.querySelectorAll('[data-edit-member]').forEach(function(btn){
       btn.addEventListener('click', function(){ openExistingMember(btn.dataset.editMember); });
+    });
+    document.querySelectorAll('[data-delete-member]').forEach(function(btn){
+      btn.addEventListener('click', function(){ deleteMember(btn.dataset.deleteMember); });
+    });
+    document.querySelectorAll('[data-access-member]').forEach(function(btn){
+      btn.addEventListener('click', function(){ setMemberAccess(btn.dataset.accessMember,btn.dataset.nextStatus); });
     });
   }
 
@@ -1163,7 +1243,13 @@ h2{
 
     $('createInviteBtn').style.display = 'none';
     $('createInviteBtn').disabled = false;
-    $('createInviteBtn').textContent = 'Create invite';
+    $('createInviteBtn').textContent = 'Create / reissue invite';
+    $('deleteMemberBtn').style.display = 'none';
+    $('memberAccessBtn').style.display = 'none';
+    $('placementSection').hidden = true;
+    $('featureKind').value = '';
+    $('featureStarts').value = '';
+    $('featureEnds').value = '';
     $('editorTitle').textContent = 'Add member';
     $('editorEyebrow').textContent = 'Member';
     message($('editorMessage'),'','');
@@ -1217,8 +1303,26 @@ h2{
     $('editorTitle').textContent = m.full_name || 'Edit member';
     $('editorEyebrow').textContent = (m.status || 'member') + ' member';
 
-    if(m.role !== 'admin' && m.status !== 'active'){
+    $('featureKind').value = m.featured_kind || '';
+    $('featureStarts').value = toLocalInput(m.featured_starts_at);
+    $('featureEnds').value = toLocalInput(m.featured_ends_at);
+
+    if(m.role !== 'admin' && (m.status === 'draft' || m.status === 'invited')){
       $('createInviteBtn').style.display = 'inline-flex';
+      if(!m.auth_user_id) $('deleteMemberBtn').style.display = 'inline-flex';
+    }
+
+    if(m.role !== 'admin' && m.status === 'active'){
+      $('memberAccessBtn').style.display = 'inline-flex';
+      $('memberAccessBtn').textContent = 'Remove from community';
+      $('memberAccessBtn').dataset.nextStatus = 'suspended';
+      $('placementSection').hidden = false;
+    }
+
+    if(m.role !== 'admin' && m.status === 'suspended'){
+      $('memberAccessBtn').style.display = 'inline-flex';
+      $('memberAccessBtn').textContent = 'Restore access';
+      $('memberAccessBtn').dataset.nextStatus = 'active';
     }
 
     openDrawer();
@@ -1376,8 +1480,14 @@ h2{
 
   async function createInvite(){
     var memberId = $('memberId').value;
+    var email = $('memberEmail').value.trim();
+
     if(!memberId){
       message($('editorMessage'),'Save the member first.','bad');
+      return;
+    }
+    if(!email){
+      message($('editorMessage'),'Enter the email this owner wants to use.','bad');
       return;
     }
 
@@ -1385,38 +1495,22 @@ h2{
     $('createInviteBtn').textContent = 'Working…';
 
     try{
-      var existing = await client
-        .from('invites')
-        .select('code,expires_at,revoked,redeemed_at')
-        .eq('member_id',memberId)
-        .eq('revoked',false)
-        .is('redeemed_at',null)
-        .order('created_at',{ascending:false})
-        .limit(1);
+      var r = await client.rpc('admin_reissue_member_invite',{
+        p_member_id:memberId,
+        p_email:email
+      });
+      if(r.error) throw r.error;
 
-      if(existing.error) throw existing.error;
-
-      var code = null;
-      var found = existing.data && existing.data[0];
-
-      if(found){
-        var stillValid = !found.expires_at || new Date(found.expires_at).getTime() > Date.now();
-        if(stillValid) code = found.code;
-      }
-
-      if(!code){
-        var r = await client.rpc('create_member_invite',{p_member_id:memberId});
-        if(r.error) throw r.error;
-        code = r.data;
-      }
+      var code = r.data && r.data.code;
+      if(!code) throw new Error('Invite code was not returned.');
 
       var link = location.origin + '/signup.html?invite=' + encodeURIComponent(code);
 
       try{
         await navigator.clipboard.writeText(link);
-        message($('editorMessage'),'Invite link copied: ' + code,'good');
+        message($('editorMessage'),'Fresh invite link copied: ' + code,'good');
       }catch(e){
-        message($('editorMessage'),'Invite ready: ' + link,'good');
+        message($('editorMessage'),'Fresh invite ready: ' + link,'good');
       }
 
       await loadMembers();
@@ -1426,9 +1520,125 @@ h2{
       message($('editorMessage'),err.message || 'Could not create invite.','bad');
     }finally{
       $('createInviteBtn').disabled = false;
-      $('createInviteBtn').textContent = 'Create invite';
+      $('createInviteBtn').textContent = 'Create / reissue invite';
     }
   }
+
+  async function quickInvite(){
+    var name = $('quickName').value.trim();
+    var email = $('quickEmail').value.trim();
+
+    message($('quickInviteMessage'),'','');
+
+    if(!name || !email){
+      message($('quickInviteMessage'),'Enter the owner name and the email they want to use.','bad');
+      return;
+    }
+
+    $('quickInviteBtn').disabled = true;
+    $('quickInviteBtn').textContent = 'Creating…';
+
+    try{
+      var r = await client.rpc('admin_quick_invite',{
+        p_full_name:name,
+        p_email:email
+      });
+      if(r.error) throw r.error;
+
+      var code = r.data && r.data.code;
+      if(!code) throw new Error('Invite code was not returned.');
+      var link = location.origin + '/signup.html?invite=' + encodeURIComponent(code);
+
+      try{
+        await navigator.clipboard.writeText(link);
+        message($('quickInviteMessage'),'Invite link copied. Send it to ' + name + '.','good');
+      }catch(e){
+        message($('quickInviteMessage'),'Invite ready: ' + link,'good');
+      }
+
+      $('quickName').value = '';
+      $('quickEmail').value = '';
+      await loadMembers();
+      await loadInvites();
+    }catch(err){
+      message($('quickInviteMessage'),err.message || 'Could not create the invite.','bad');
+    }finally{
+      $('quickInviteBtn').disabled = false;
+      $('quickInviteBtn').textContent = 'Create invite link';
+    }
+  }
+
+  async function deleteMember(memberId){
+    var m = membersCache.find(function(x){ return x.id === memberId; });
+    if(!m) return;
+
+    if(!confirm('Permanently delete ' + (m.full_name || 'this unused member') + '?\\n\\nUse this only for a Draft or Invited record that was never claimed.')) return;
+
+    try{
+      var r = await client.rpc('admin_delete_unclaimed_member',{p_member_id:memberId});
+      if(r.error) throw r.error;
+      if($('memberId').value === memberId) closeDrawer();
+      message($('pageMessage'),'Unused member deleted.','good');
+      await loadMembers();
+      await loadInvites();
+    }catch(err){
+      message($('pageMessage'),err.message || 'Could not delete member.','bad');
+    }
+  }
+
+  async function setMemberAccess(memberId,nextStatus){
+    var m = membersCache.find(function(x){ return x.id === memberId; });
+    if(!m) return;
+
+    if(nextStatus === 'suspended'){
+      if(!confirm('Remove ' + (m.full_name || 'this member') + ' from the community?\\n\\nTheir history stays intact, but they will lose access.')) return;
+    }
+
+    try{
+      var r = await client.rpc('admin_set_member_access',{
+        p_member_id:memberId,
+        p_status:nextStatus
+      });
+      if(r.error) throw r.error;
+
+      message($('pageMessage'),nextStatus === 'active' ? 'Member access restored.' : 'Member removed from the community.','good');
+      await loadMembers();
+      if($('memberId').value === memberId) openExistingMember(memberId);
+    }catch(err){
+      message($('pageMessage'),err.message || 'Could not change member access.','bad');
+    }
+  }
+
+  async function savePlacement(){
+    var memberId = $('memberId').value;
+    if(!memberId) return;
+
+    $('savePlacementBtn').disabled = true;
+    $('savePlacementBtn').textContent = 'Saving…';
+
+    try{
+      var r = await client.rpc('admin_set_featured_member',{
+        p_member_id:memberId,
+        p_kind:$('featureKind').value || null,
+        p_starts_at:toIsoOrNull($('featureStarts').value),
+        p_ends_at:toIsoOrNull($('featureEnds').value)
+      });
+      if(r.error) throw r.error;
+
+      message($('editorMessage'),
+        $('featureKind').value ? 'Home placement updated.' : 'Featured placement removed.',
+        'good'
+      );
+      await loadMembers();
+      openExistingMember(memberId);
+    }catch(err){
+      message($('editorMessage'),err.message || 'Could not update featured placement.','bad');
+    }finally{
+      $('savePlacementBtn').disabled = false;
+      $('savePlacementBtn').textContent = 'Save placement';
+    }
+  }
+
 
   async function loadPosts(resourcesOnly){
     var target = resourcesOnly ? $('resourceList') : $('postList');
@@ -1585,11 +1795,26 @@ h2{
   $('loginPassword').addEventListener('keydown',function(e){ if(e.key === 'Enter') signIn(); });
   $('logoutBtn').addEventListener('click',signOut);
 
-  $('addMemberBtn').addEventListener('click',openNewMember);
+  $('addMemberBtn').addEventListener('click',function(){
+    $('quickInviteCard').hidden = !$('quickInviteCard').hidden;
+    if(!$('quickInviteCard').hidden) setTimeout(function(){ $('quickName').focus(); },0);
+  });
+  $('quickInviteBtn').addEventListener('click',quickInvite);
+  $('quickEmail').addEventListener('keydown',function(e){ if(e.key === 'Enter') quickInvite(); });
   $('closeEditorBtn').addEventListener('click',closeDrawer);
   $('scrim').addEventListener('click',closeDrawer);
   $('saveMemberBtn').addEventListener('click',saveMember);
   $('createInviteBtn').addEventListener('click',createInvite);
+  $('deleteMemberBtn').addEventListener('click',function(){
+    var id = $('memberId').value;
+    if(id) deleteMember(id);
+  });
+  $('memberAccessBtn').addEventListener('click',function(){
+    var id = $('memberId').value;
+    var next = $('memberAccessBtn').dataset.nextStatus;
+    if(id && next) setMemberAccess(id,next);
+  });
+  $('savePlacementBtn').addEventListener('click',savePlacement);
 
   $('memberSearch').addEventListener('input',renderMembers);
   $('memberStatus').addEventListener('change',renderMembers);

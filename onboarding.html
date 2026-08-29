@@ -217,27 +217,43 @@
     btn.disabled=true;btn.textContent='Saving…';show('profileMsg','',false);
 
     try{
-      if(photoFile){
-        var ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[photoFile.type];
-        var path=member.id+'/profile-'+Date.now()+'.'+ext;
-        var up=await client.storage.from('member-media').upload(path,photoFile,{
-          cacheControl:'3600',upsert:false,contentType:photoFile.type
-        });
-        if(up.error)throw up.error;
-        var pub=client.storage.from('member-media').getPublicUrl(path);
-        photoUrl=pub.data&&pub.data.publicUrl;
-        if(!photoUrl)throw new Error('Could not create the photo URL.');
-        var pr=await client.rpc('update_my_profile_photo',{p_profile_photo_url:photoUrl});
-        if(pr.error)throw pr.error;
-      }
-
+      // Save the member/business profile FIRST.
+      // A profile picture is optional and should never block someone from joining.
       var r=await client.rpc('save_my_onboarding',values);
-      if(r.error)throw r.error;
+      if(r.error)throw new Error('Profile save failed: '+(r.error.message||'Unknown database error.'));
+
+      var photoWarning='';
+      if(photoFile){
+        try{
+          var ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[photoFile.type];
+          var path=member.id+'/profile-'+Date.now()+'.'+ext;
+
+          var up=await client.storage.from('member-media').upload(path,photoFile,{
+            cacheControl:'3600',upsert:false,contentType:photoFile.type
+          });
+
+          if(up.error)throw up.error;
+
+          var pub=client.storage.from('member-media').getPublicUrl(path);
+          photoUrl=pub.data&&pub.data.publicUrl;
+          if(!photoUrl)throw new Error('Could not create the photo URL.');
+
+          var pr=await client.rpc('update_my_profile_photo',{p_profile_photo_url:photoUrl});
+          if(pr.error)throw pr.error;
+        }catch(photoErr){
+          console.warn('Profile photo upload did not complete:',photoErr);
+          photoWarning='Your profile is saved. The photo did not upload, but you can add it later from Me.';
+        }
+      }
 
       $('introBody').value=makeIntro();
       $('profileStep').hidden=true;
       $('introStep').hidden=false;
       window.scrollTo(0,0);
+
+      if(photoWarning){
+        show('introMsg',photoWarning,false);
+      }
     }catch(e){
       show('profileMsg',e.message||'Could not save your profile.',true);
     }finally{

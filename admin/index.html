@@ -405,8 +405,12 @@ h2{
   overflow-y:auto;
   max-width:720px;
   margin:0 auto;
+  pointer-events:none;
 }
-#memberDrawer.on{transform:translateY(0)}
+#memberDrawer.on{
+  transform:translateY(0);
+  pointer-events:auto;
+}
 .grab{
   width:40px;
   height:4.5px;
@@ -701,7 +705,7 @@ h2{
 <!-- ==================== MEMBER EDITOR ==================== -->
 <div id="scrim"></div>
 
-<div id="memberDrawer" role="dialog" aria-modal="true" aria-label="Member editor">
+<div id="memberDrawer" role="dialog" aria-modal="true" aria-label="Member editor" aria-hidden="true" inert>
   <div class="grab"></div>
 
   <div class="dhead">
@@ -839,7 +843,7 @@ h2{
 
 <!-- Supabase browser library + existing browser-safe config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../assets/config.js?v=community1"></script>
+<script src="../assets/config.js?v=community3"></script>
 
 <script>
 /* ==========================================================================
@@ -895,6 +899,17 @@ h2{
     el.textContent = text || '';
     el.className = 'message' + (text ? ' on ' + (type || '') : '');
   }
+
+  window.addEventListener('error', function(e){
+    var target = $('adminApp') && !$('adminApp').hidden ? $('pageMessage') : $('loginMessage');
+    message(target, 'Page error: ' + (e.message || 'Unknown JavaScript error.'), 'bad');
+  });
+
+  window.addEventListener('unhandledrejection', function(e){
+    var reason = e.reason && (e.reason.message || String(e.reason));
+    var target = $('adminApp') && !$('adminApp').hidden ? $('pageMessage') : $('loginMessage');
+    message(target, 'Page error: ' + (reason || 'Unexpected request error.'), 'bad');
+  });
 
   function initClient(){
     if(typeof initSupabase === 'function'){
@@ -1221,13 +1236,19 @@ h2{
   }
 
   function openDrawer(){
+    var drawer = $('memberDrawer');
+    drawer.inert = false;
+    drawer.setAttribute('aria-hidden','false');
     $('scrim').classList.add('on');
-    $('memberDrawer').classList.add('on');
+    drawer.classList.add('on');
   }
 
   function closeDrawer(){
+    var drawer = $('memberDrawer');
     $('scrim').classList.remove('on');
-    $('memberDrawer').classList.remove('on');
+    drawer.classList.remove('on');
+    drawer.inert = true;
+    drawer.setAttribute('aria-hidden','true');
   }
 
   async function uploadImage(file, memberId, kind){
@@ -1361,20 +1382,41 @@ h2{
     }
 
     $('createInviteBtn').disabled = true;
-    $('createInviteBtn').textContent = 'Creating…';
+    $('createInviteBtn').textContent = 'Working…';
 
     try{
-      var r = await client.rpc('create_member_invite',{p_member_id:memberId});
-      if(r.error) throw r.error;
+      var existing = await client
+        .from('invites')
+        .select('code,expires_at,revoked,redeemed_at')
+        .eq('member_id',memberId)
+        .eq('revoked',false)
+        .is('redeemed_at',null)
+        .order('created_at',{ascending:false})
+        .limit(1);
 
-      var code = r.data;
+      if(existing.error) throw existing.error;
+
+      var code = null;
+      var found = existing.data && existing.data[0];
+
+      if(found){
+        var stillValid = !found.expires_at || new Date(found.expires_at).getTime() > Date.now();
+        if(stillValid) code = found.code;
+      }
+
+      if(!code){
+        var r = await client.rpc('create_member_invite',{p_member_id:memberId});
+        if(r.error) throw r.error;
+        code = r.data;
+      }
+
       var link = location.origin + '/signup.html?invite=' + encodeURIComponent(code);
 
       try{
         await navigator.clipboard.writeText(link);
-        message($('editorMessage'),'Invite created and link copied: ' + code,'good');
+        message($('editorMessage'),'Invite link copied: ' + code,'good');
       }catch(e){
-        message($('editorMessage'),'Invite created: ' + link,'good');
+        message($('editorMessage'),'Invite ready: ' + link,'good');
       }
 
       await loadMembers();
@@ -1382,8 +1424,8 @@ h2{
 
     }catch(err){
       message($('editorMessage'),err.message || 'Could not create invite.','bad');
-      $('createInviteBtn').disabled = false;
     }finally{
+      $('createInviteBtn').disabled = false;
       $('createInviteBtn').textContent = 'Create invite';
     }
   }

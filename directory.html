@@ -1,4 +1,56 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Directory · seek+scale.</title><link rel="stylesheet" href="assets/app.css"><link rel="manifest" href="manifest.json"></head><body><div class="shell"><nav class="side" id="side"></nav><main><h1>Directory</h1><p class="sub">Member businesses. Vouch for the ones you know.</p><div class="filters" id="filters"></div><div id="dirList"><div class="loading">Loading…</div></div></main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js"></script><script src="assets/app.js"></script><script>
-(async function(){try{await requireMember('directory');var trade='All',list=await loadBusinesses();function render(){var cats=['All'];list.forEach(function(b){if(b.category&&cats.indexOf(b.category)<0)cats.push(b.category);});document.getElementById('filters').innerHTML=cats.map(function(t){return '<button class="fchip'+(t===trade?' on':'')+'" data-trade="'+esc(t)+'">'+esc(t)+'</button>';}).join('');var shown=list.filter(function(b){return trade==='All'||b.category===trade;}).sort(function(a,b){return b.vouch_count-a.vouch_count;});document.getElementById('dirList').innerHTML=shown.length?shown.map(function(b){return businessCard(b,{});}).join(''):'<div class="empty">No businesses in this category yet.</div>';}window.onVouchChange=render;document.addEventListener('click',function(e){var t=e.target.closest('[data-trade]');if(t){trade=t.dataset.trade;render();}});render();}catch(e){if(!/signin|pending|suspended/.test(e.message))showPageError('dirList',e.message);}})();
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111"><title>Members · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
+<header class="top" id="top"></header>
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main>
+    <h1>Members</h1>
+    <p class="sub">Real owners. Real businesses. People worth knowing.</p>
+
+    <div class="card yellow">
+      <strong>No unsolicited pitching.</strong>
+      <div class="tiny" style="margin-top:4px;color:#444">This is a relationship room, not a lead list.</div>
+    </div>
+
+    <div class="searchbox"><input id="search" type="search" placeholder="Search people, businesses, trades or towns"></div>
+    <div id="members"><div class="loading">Loading members…</div></div>
+  </main>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<a class="help-fab" href="helpdesk.html">Get help</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=community-v1"></script>
+<script src="assets/app.js?v=community-v1"></script>
+<script>
+(async function(){
+  try{
+    await SS.requireMember('members');
+    var all=await SS.loadMembers();
+
+    function render(){
+      var q=SS.$('search').value.trim().toLowerCase();
+      var rows=all.filter(function(x){
+        var m=x.member,b=x.business||{};
+        var hay=[m.full_name,m.headline,m.bio,m.looking_for,b.name,b.trade,b.city,b.what_they_do,b.helps_with].join(' ').toLowerCase();
+        return !q||hay.indexOf(q)!==-1;
+      });
+      SS.$('members').innerHTML=rows.length?rows.map(SS.memberCard).join(''):'<div class="card"><div class="empty">No members match that search.</div></div>';
+    }
+
+    SS.$('search').addEventListener('input',render);
+    SS.$('members').addEventListener('click',async function(e){
+      var v=e.target.closest('[data-vouch-target]');
+      if(!v)return;
+      v.disabled=true;
+      try{await SS.toggleVouch(v.getAttribute('data-vouch-target'));all=await SS.loadMembers();render();}
+      catch(err){SS.toast(err.message);v.disabled=false;}
+    });
+    render();
+  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('members',e.message);}
+})();
 </script></body></html>

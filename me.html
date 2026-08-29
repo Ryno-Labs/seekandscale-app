@@ -1,4 +1,108 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Me · seek+scale.</title><link rel="stylesheet" href="assets/app.css"><link rel="manifest" href="manifest.json"></head><body><div class="shell"><nav class="side" id="side"></nav><main><h1>Your account</h1><p class="sub">Keep your member details current.</p><div class="card"><div class="profile-grid"><div class="field"><label for="name">Your name</label><input id="name"></div><div class="field"><label for="biz">Business name</label><input id="biz"></div><div class="field"><label for="trade">Trade / category</label><input id="trade"></div><div class="field"><label for="town">Town</label><input id="town"></div><div class="field"><label for="zone">Area</label><select id="zone"><option value="">—</option></select></div></div><div class="profile-actions"><button class="btn sm" id="save">Save profile</button><button class="act soft" id="out">Sign out</button></div><p class="tiny" id="profileMsg"></p></div><h2>Your directory listing</h2><div id="myBusiness"><div class="loading">Loading…</div></div><h2>Your forum posts</h2><div class="card" id="myPosts"></div><h2>Shops you vouched for</h2><div class="card" id="myVouches"></div><div class="card flat" style="margin-top:22px"><div class="tiny">Need to change or cancel a paid membership? Email <span id="contact"></span>.</div></div></main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js"></script><script src="assets/app.js"></script><script>
-(async function(){try{await requireMember('me');var zones=await loadZones();document.getElementById('zone').innerHTML='<option value="">—</option>'+zones.map(function(z){return '<option value="'+z.id+'">'+esc(z.name)+'</option>';}).join('');function fill(){document.getElementById('name').value=SS.profile.full_name||'';document.getElementById('biz').value=SS.profile.business_name||'';document.getElementById('trade').value=SS.profile.trade||'';document.getElementById('town').value=SS.profile.town||'';document.getElementById('zone').value=SS.profile.zone_id||'';}fill();document.getElementById('contact').textContent=SITE_CONTACT_EMAIL;document.getElementById('out').onclick=signOut;document.getElementById('save').onclick=async function(){this.disabled=true;var m=document.getElementById('profileMsg');m.textContent='Saving…';try{await updateMyProfile({full_name:document.getElementById('name').value.trim(),business_name:document.getElementById('biz').value.trim(),trade:document.getElementById('trade').value.trim(),town:document.getElementById('town').value.trim(),zone_id:document.getElementById('zone').value||null});m.textContent='Saved.';}catch(e){m.textContent=e.message;}finally{this.disabled=false;}};var businesses=await loadBusinesses(),mine=businesses.filter(function(b){return b.owner_id===SS.user.id;});document.getElementById('myBusiness').innerHTML=mine.length?mine.map(function(b){return businessCard(b,{});}).join(''):'<div class="card flat"><p class="tiny" style="margin:0">Your account is active, but no directory business is linked to it yet. An admin can add or link your business from the Admin dashboard.</p></div>';var p=await sb.from('posts').select('*').eq('author_id',SS.user.id).order('created_at',{ascending:false});document.getElementById('myPosts').innerHTML=p.error?'<p class="tiny">'+esc(p.error.message)+'</p>':(p.data.length?p.data.map(function(x){return '<div class="post"><div class="who"><span class="chip">'+esc(x.category||'post')+'</span><span class="t">'+esc(fmtTime(x.created_at))+'</span><button class="act soft" style="margin-left:auto" data-del="'+x.id+'">Take it down</button></div><p class="body">'+esc(x.body||'')+'</p></div>';}).join(''):'<div class="empty">You have not posted yet.</div>');var ids=SS.vouches.filter(function(v){return v.member_id===SS.user.id;}).map(function(v){return v.business_id;});var vb=businesses.filter(function(b){return ids.indexOf(b.id)>=0;});document.getElementById('myVouches').innerHTML=vb.length?vb.map(function(b){return '<div class="kit"><div class="kd"><div class="kn">'+esc(b.name)+'</div><div class="kp">'+esc([b.category,businessTown(b)].filter(Boolean).join(' · '))+'</div></div><a class="act soft" href="shop.html?id='+encodeURIComponent(b.id)+'">Open</a></div>';}).join(''):'<div class="empty">You have not vouched for a business yet.</div>';document.addEventListener('click',async function(e){var d=e.target.closest('[data-del]');if(d&&confirm('Take this post down?')){var r=await sb.from('posts').delete().eq('id',d.dataset.del);if(r.error)alert(r.error.message);else location.reload();}});}catch(e){if(!/signin|pending|suspended/.test(e.message))showPageError('myBusiness',e.message);}})();
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111"><title>Me · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
+<header class="top" id="top"></header>
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main>
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1"><h1>Me</h1><p class="sub">Keep your member profile useful and current.</p></div>
+      <button class="pill" id="signout" type="button">Sign out</button>
+    </div>
+
+    <div id="identity"></div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Your profile</h2>
+      <div class="field"><label for="fullName">Your name</label><input id="fullName" placeholder="Your name"></div>
+      <div class="field"><label for="headline">Headline</label><input id="headline" placeholder="What you do in one short line"></div>
+      <div class="field"><label for="bio">About you</label><textarea id="bio" placeholder="A short useful introduction"></textarea></div>
+      <div class="field"><label for="lookingFor">What are you looking for?</label><textarea id="lookingFor" placeholder="A person, problem, opportunity or connection"></textarea></div>
+      <div class="field"><label for="phone">Your phone</label><input id="phone" placeholder="Your phone number"></div>
+      <div class="field"><label for="instagram">Instagram</label><input id="instagram" placeholder="Your Instagram link"></div>
+      <div class="field"><label for="linkedin">LinkedIn</label><input id="linkedin" placeholder="Your LinkedIn link"></div>
+
+      <h2>Business</h2>
+      <div class="field"><label for="businessName">Business name</label><input id="businessName" placeholder="Your business name"></div>
+      <div class="field"><label for="trade">Trade</label><input id="trade" placeholder="Your trade"></div>
+      <div class="field"><label for="city">Town</label><input id="city" placeholder="Your town"></div>
+      <div class="field"><label for="does">What do you do?</label><textarea id="does" placeholder="What your business does"></textarea></div>
+      <div class="field"><label for="helps">How can you help other members?</label><textarea id="helps" placeholder="What you are useful for"></textarea></div>
+      <div class="field"><label for="businessPhone">Business phone</label><input id="businessPhone" placeholder="Business phone"></div>
+      <div class="field"><label for="businessEmail">Business email</label><input id="businessEmail" type="email" placeholder="Business email"></div>
+      <div class="field"><label for="website">Website</label><input id="website" placeholder="Website"></div>
+
+      <h2>Privacy</h2>
+      <div class="privacy">
+        <label class="checkline"><input id="showEmail" type="checkbox"> Show my member email</label>
+        <label class="checkline"><input id="showPhone" type="checkbox"> Show my phone</label>
+        <label class="checkline"><input id="showSocials" type="checkbox"> Show my social links</label>
+      </div>
+
+      <button class="btn wide" id="save" type="button">Save profile</button>
+      <div class="message" id="msg" aria-live="polite"></div>
+      <div class="tiny">Profile photo, logo and banner are managed by Admin in this version.</div>
+    </div>
+  </main>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<a class="help-fab" href="helpdesk.html">Get help</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=community-v1"></script>
+<script src="assets/app.js?v=community-v1"></script>
+<script>
+(async function(){
+  try{
+    await SS.requireMember('me');
+    SS.$('signout').addEventListener('click',SS.signOut);
+
+    function fill(){
+      var m=SS.ctx.member,b=SS.ctx.business||{};
+      SS.$('identity').innerHTML='<div class="card flat" style="display:flex;gap:12px;align-items:center">'+SS.avatar(m)+
+        '<div><strong>'+SS.esc(m.full_name)+'</strong><div class="tiny">'+SS.esc(SS.businessLine(m,b))+'</div></div></div>';
+
+      SS.$('fullName').value=m.full_name||'';SS.$('headline').value=m.headline||'';SS.$('bio').value=m.bio||'';
+      SS.$('lookingFor').value=m.looking_for||'';SS.$('phone').value=m.phone||'';SS.$('instagram').value=m.instagram_url||'';
+      SS.$('linkedin').value=m.linkedin_url||'';SS.$('showEmail').checked=!!m.show_email;SS.$('showPhone').checked=!!m.show_phone;
+      SS.$('showSocials').checked=!!m.show_socials;SS.$('businessName').value=b.name||'';SS.$('trade').value=b.trade||'';
+      SS.$('city').value=b.city||'';SS.$('does').value=b.what_they_do||'';SS.$('helps').value=b.helps_with||'';
+      SS.$('businessPhone').value=b.contact_phone||'';SS.$('businessEmail').value=b.contact_email||'';SS.$('website').value=b.website||'';
+    }
+
+    SS.$('save').addEventListener('click',async function(){
+      var btn=this;btn.disabled=true;btn.textContent='Saving…';SS.$('msg').textContent='';
+      var r=await SS.client.rpc('update_my_profile',{
+        p_full_name:SS.$('fullName').value,
+        p_headline:SS.$('headline').value,
+        p_bio:SS.$('bio').value,
+        p_looking_for:SS.$('lookingFor').value,
+        p_phone:SS.$('phone').value,
+        p_instagram_url:SS.$('instagram').value,
+        p_linkedin_url:SS.$('linkedin').value,
+        p_show_email:SS.$('showEmail').checked,
+        p_show_phone:SS.$('showPhone').checked,
+        p_show_socials:SS.$('showSocials').checked,
+        p_business_name:SS.$('businessName').value,
+        p_trade:SS.$('trade').value,
+        p_city:SS.$('city').value,
+        p_what_they_do:SS.$('does').value,
+        p_helps_with:SS.$('helps').value,
+        p_contact_phone:SS.$('businessPhone').value,
+        p_contact_email:SS.$('businessEmail').value,
+        p_website:SS.$('website').value
+      });
+      btn.disabled=false;btn.textContent='Save profile';
+      if(r.error){SS.$('msg').textContent=r.error.message;SS.$('msg').className='message bad';return;}
+      SS.$('msg').textContent='Profile saved.';SS.$('msg').className='message good';
+      var id=SS.ctx.member.id;
+      var fresh=await SS.getMember(id);
+      if(fresh){SS.ctx.member=fresh.member;SS.ctx.business=fresh.business;fill();}
+    });
+    fill();
+  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('identity',e.message);}
+})();
 </script></body></html>

@@ -1,5 +1,135 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Home · seek+scale.</title><link rel="stylesheet" href="assets/app.css"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png"></head><body>
-<div class="shell"><nav class="side" id="side"></nav><main><h1>What's going on</h1><p class="sub" id="today"></p><div id="feature"></div><h2>Worth knowing</h2><div class="card" id="newsList"><div class="loading">Loading…</div></div><h2>New members</h2><div id="homeList"><div class="loading">Loading…</div></div></main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js"></script><script src="assets/app.js"></script><script>
-(async function(){try{await requireMember('home');document.getElementById('today').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});var all=await loadPosts(['article','news','resource'],8);var art=all.find(function(p){return p.category==='article';});document.getElementById('feature').innerHTML=art?'<div class="feat"><div class="band" style="background:#111"></div><div class="in"><div class="eyebrow">This week\'s story</div><h3>'+esc(art.title)+'</h3><p>'+esc((art.body||'').slice(0,220))+(art.body&&art.body.length>220?'…':'')+'</p><div class="by"><div><div class="tiny">'+esc(art.business_name||art.author_name||'Seek & Scale')+' · '+esc(fmtTime(art.created_at))+'</div></div><a class="act soft" style="margin-left:auto" href="article.html?id='+encodeURIComponent(art.id)+'">Read</a></div></div></div>':'';var news=all.filter(function(p){return !art||p.id!==art.id;}).slice(0,5);document.getElementById('newsList').innerHTML=news.length?news.map(function(n){return '<div class="news"><div class="tagsq">'+(n.category==='news'?'!':'↗')+'</div><div class="kd"><div class="kn">'+esc(n.title)+'</div><div class="kp">'+esc((n.body||'').slice(0,150))+'</div></div></div>';}).join(''):'<div class="empty">Nothing posted yet.</div>';var biz=await loadBusinesses();window.onVouchChange=function(){document.getElementById('homeList').innerHTML=biz.slice(0,6).map(function(b){return businessCard(b,{isNew:true});}).join('');};window.onVouchChange();}catch(e){if(e.message!=='signin'&&e.message!=='pending'&&e.message!=='suspended')showPageError('newsList',e.message);}})();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111"><title>Home · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
+<header class="top" id="top"></header>
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main>
+    <h1>The room</h1>
+    <p class="sub">Ask. Share. Help somebody move forward.</p>
+
+    <div class="card composer">
+      <textarea id="postBody" placeholder="Share something with the room..." maxlength="4000"></textarea>
+      <div class="composer-foot">
+        <select id="postType" aria-label="Post type">
+          <option value="discussion">Discussion</option>
+          <option value="question">Question</option>
+          <option value="win">Win</option>
+        </select>
+        <button class="btn sm" id="postBtn" type="button" disabled>Post</button>
+      </div>
+      <div class="message" id="postMsg" aria-live="polite"></div>
+    </div>
+
+    <h2>Latest</h2>
+    <div class="card" id="feed"><div class="loading">Loading the room…</div></div>
+  </main>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<a class="help-fab" href="helpdesk.html">Get help</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=community-v1"></script>
+<script src="assets/app.js?v=community-v1"></script>
+<script>
+(async function(){
+  try{
+    await SS.requireMember('home');
+    var body=SS.$('postBody'),btn=SS.$('postBtn'),type=SS.$('postType'),msg=SS.$('postMsg');
+
+    body.addEventListener('input',function(){
+      btn.disabled=body.value.trim().length<4;
+      body.style.height='auto';
+      body.style.height=Math.min(body.scrollHeight,220)+'px';
+    });
+
+    btn.addEventListener('click',async function(){
+      var text=body.value.trim();
+      if(text.length<4)return;
+      btn.disabled=true;btn.textContent='Posting…';msg.textContent='';
+      var r=await SS.client.from('posts').insert({
+        author_member_id:SS.ctx.member.id,
+        category:type.value,
+        body:text
+      });
+      btn.textContent='Post';
+      if(r.error){msg.textContent=r.error.message;msg.className='message bad';btn.disabled=false;return;}
+      body.value='';body.style.height='auto';msg.textContent='Posted.';msg.className='message good';
+      await loadFeed();
+    });
+
+    async function loadFeed(){
+      var posts=await SS.loadPosts(['discussion','question','win','announcement','opportunity'],60);
+      var replies=await SS.loadReplies(posts.map(function(p){return p.id;}));
+      var byPost={};
+      replies.forEach(function(r){(byPost[r.post_id]||(byPost[r.post_id]=[])).push(r);});
+
+      if(!posts.length){
+        SS.$('feed').innerHTML='<div class="empty"><strong>No posts yet.</strong><br>Be the first person to start the room.</div>';
+        return;
+      }
+
+      SS.$('feed').innerHTML=posts.map(function(p){
+        var m=p.author||{full_name:'Seek & Scale'},b=p.business||{};
+        var rs=byPost[p.id]||[];
+        return '<article class="feed-post" data-post="'+SS.esc(p.id)+'">'+
+          '<div class="post-head">'+SS.avatar(m)+
+            '<div class="post-meta"><div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
+            '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div></div>'+
+            '<span class="chip '+(p.category==='announcement'?'yellow':'')+'">'+SS.esc(p.category)+'</span>'+
+          '</div>'+
+          '<div class="post-body">'+SS.esc(p.body)+'</div>'+
+          '<div class="post-tools"><span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+
+          (p.author_member_id===SS.ctx.member.id?'<button class="act danger" type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>':'')+
+          '</div>'+
+          '<div class="reply-list">'+
+            rs.map(function(r){var rm=r.author||{full_name:'Member'};return '<div class="reply"><div class="reply-name">'+SS.esc(rm.full_name||'Member')+'</div><div class="reply-body">'+SS.esc(r.body)+'</div></div>';}).join('')+
+            '<div class="reply-form"><input data-reply-input="'+SS.esc(p.id)+'" placeholder="Write a reply..." maxlength="2000"><button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button></div>'+
+          '</div>'+
+        '</article>';
+      }).join('');
+    }
+
+    SS.$('feed').addEventListener('click',async function(e){
+      var reply=e.target.closest('[data-reply]');
+      if(reply){
+        var postId=reply.getAttribute('data-reply');
+        var input=document.querySelector('[data-reply-input="'+CSS.escape(postId)+'"]');
+        var text=input.value.trim();
+        if(!text)return;
+        reply.disabled=true;
+        var r=await SS.client.from('post_replies').insert({
+          post_id:postId,author_member_id:SS.ctx.member.id,body:text
+        });
+        if(r.error){SS.toast(r.error.message);reply.disabled=false;return;}
+        await loadFeed();return;
+      }
+      var del=e.target.closest('[data-delete-post]');
+      if(del){
+        if(!confirm('Delete this post?'))return;
+        var id=del.getAttribute('data-delete-post');
+        var r=await SS.client.from('posts').delete().eq('id',id);
+        if(r.error){SS.toast(r.error.message);return;}
+        await loadFeed();
+      }
+    });
+
+    SS.$('feed').addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&e.target.matches('[data-reply-input]')){
+        e.preventDefault();
+        var id=e.target.getAttribute('data-reply-input');
+        var b=document.querySelector('[data-reply="'+CSS.escape(id)+'"]');
+        if(b)b.click();
+      }
+    });
+
+    await loadFeed();
+  }catch(e){
+    if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('feed',e.message);
+  }
+})();
 </script></body></html>

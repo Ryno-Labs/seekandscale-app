@@ -1,4 +1,74 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Help Desk · seek+scale.</title><link rel="stylesheet" href="assets/app.css"><link rel="manifest" href="manifest.json"></head><body><div class="shell"><nav class="side" id="side"></nav><main><h1>Help Desk</h1><p class="sub">Ask anything. Or hand over the work that keeps getting pushed back.</p><div class="card composer" id="askCard"><textarea id="hAsk" placeholder="What's stuck right now?"></textarea><div class="crow"><span class="tiny">Only Seek & Scale admins see this.</span><button class="btn sm" id="hPost" disabled style="margin-left:auto">Send it</button></div></div><div id="hAck"></div><h2>We'll do it for you</h2><div id="svcList"></div><h2>Do it yourself</h2><div class="card" id="kitList"></div><h2>Free resources</h2><div class="card" id="resourceList"><div class="loading">Loading…</div></div><div class="calc"><h3>What's your hour worth?</h3><p class="lead">Set it once. Every price on this page changes.</p><div><span class="num tnum" id="calcNum">$85</span><span class="per">an hour</span></div><input type="range" id="rateRange" min="15" max="400" step="5" value="85" aria-label="Your hourly rate"><div class="ends"><span>$15</span><span>$400</span></div><div class="bdoor"><p>Don't know your number? Two questions.</p><div class="two"><div class="fl"><label for="bdRev">A good week of money in</label><input type="number" id="bdRev" inputmode="numeric" placeholder="4,000"></div><div class="fl"><label for="bdHrs">Hours you worked</label><input type="number" id="bdHrs" inputmode="numeric" placeholder="62"></div></div><div class="out" id="bdOut"></div></div></div></main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script><script>
-(async function(){try{await requireMember('help');var rate=Number(localStorage.getItem('ss_rate')||85),ta=document.getElementById('hAsk'),send=document.getElementById('hPost');function askFor(subject){ta.value='I want help with: '+subject+'\n\n';ta.dispatchEvent(new Event('input'));document.getElementById('askCard').scrollIntoView({behavior:'smooth',block:'center'});ta.focus();}document.getElementById('svcList').innerHTML=SVC.map(function(f){var h='<div class="svc"><h3>'+esc(f.t)+'</h3><p class="said">'+esc(f.said)+'</p><ul>'+f.li.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';if(f.note)h+='<div class="tiny" style="margin-top:13px;padding:12px 14px;background:var(--surface);border-radius:13px">'+esc(f.note)+'</div>';h+='<div class="doors"><div class="door"><div class="info"><div class="lbl">Do it yourself</div><div class="mt">'+esc(f.kit)+' · member kit<br>About '+f.hrs+' hours · <span class="worth tnum" data-hrs="'+f.hrs+'"></span> of your time.</div></div><button class="act" data-kit="'+esc(f.kitKey)+'" data-name="'+esc(f.kit)+'">Get it</button></div><div class="door"><div class="info"><div class="lbl">We do it</div><div class="mt">'+esc(f.fixN)+' · '+money(f.fixP)+' · '+esc(f.fixT)+'<br>You keep <span class="keep">'+f.hrs+' hours</span>.</div></div><button class="act solid" data-service="'+esc(f.fixN)+'">Hand it over</button></div></div></div>';return h;}).join('');document.getElementById('kitList').innerHTML=KITS.map(function(k){return '<div class="kit"><div class="kd"><div class="kn">'+esc(k.name)+'</div><div class="kp">'+esc(k.desc)+'<br><b>$27</b> member price</div></div><button class="act soft" data-kit="'+esc(k.key)+'" data-name="'+esc(k.name)+'">Get it</button></div>';}).join('');function setRate(v){rate=v;localStorage.setItem('ss_rate',String(v));document.getElementById('calcNum').textContent=money(v);document.getElementById('rateRange').value=v;document.querySelectorAll('.worth').forEach(function(el){el.textContent=money(Number(el.dataset.hrs)*v);});}setRate(rate);document.getElementById('rateRange').addEventListener('input',function(){setRate(+this.value);});function backdoor(){var r=+document.getElementById('bdRev').value,h=+document.getElementById('bdHrs').value,out=document.getElementById('bdOut');if(r>0&&h>0){out.innerHTML='You are working for <b>'+money(r/h)+' an hour</b>.';setRate(Math.max(15,Math.min(400,Math.round(r/h/5)*5)));}else out.textContent='';}document.getElementById('bdRev').addEventListener('input',backdoor);document.getElementById('bdHrs').addEventListener('input',backdoor);ta.addEventListener('input',function(){send.disabled=ta.value.trim().length<4;ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});send.onclick=async function(){this.disabled=true;try{await submitHelpRequest('question','Help Desk request',ta.value.trim());ta.value='';ta.style.height='auto';document.getElementById('hAck').innerHTML='<div class="notice good"><b>Sent.</b> It is in the admin Help Desk queue.</div>';}catch(e){document.getElementById('hAck').innerHTML='<div class="notice bad">'+esc(e.message)+'</div>';this.disabled=false;}};document.addEventListener('click',function(e){var s=e.target.closest('[data-service]');if(s){askFor(s.dataset.service);return;}var k=e.target.closest('[data-kit]');if(k){var u=configuredLink(KIT_MEMBER_LINKS,k.dataset.kit);if(u)location.href=u;else askFor(k.dataset.name);}});var res=await loadPosts(['resource'],10);document.getElementById('resourceList').innerHTML=res.length?res.map(function(p){return '<div class="kit"><div class="kd"><div class="kn">'+esc(p.title)+'</div><div class="kp">'+esc((p.body||'').slice(0,140))+'</div></div><a class="act soft" href="article.html?id='+encodeURIComponent(p.id)+'">Read</a></div>';}).join(''):'<div class="empty">No resources posted yet.</div>';}catch(e){if(!/signin|pending|suspended/.test(e.message))showPageError('resourceList',e.message);}})();
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111"><title>Get help · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
+<header class="top" id="top"></header>
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main>
+    <h1>Get help</h1>
+    <p class="sub">Tell Seek &amp; Scale what is stuck. We will look at the problem and figure out the next move.</p>
+
+    <div class="card yellow">
+      <strong>Need execution, not another idea?</strong>
+      <div class="tiny" style="margin-top:5px;color:#444">Send the problem. If it fits, Seek &amp; Scale can help get it done.</div>
+    </div>
+
+    <div class="card">
+      <div class="field"><label for="need">What is stuck?</label><textarea id="need" placeholder="Tell us the problem." maxlength="4000"></textarea></div>
+      <div class="field"><label for="outcome">What would a good result look like?</label><textarea id="outcome" placeholder="Tell us what you want to happen." maxlength="4000"></textarea></div>
+      <div class="field"><label for="notes">Anything else we should know?</label><textarea id="notes" placeholder="Optional" maxlength="4000"></textarea></div>
+      <div class="field"><label for="contact">Best way to contact you</label>
+        <select id="contact"><option value="text">Text</option><option value="phone">Phone</option><option value="email">Email</option></select>
+      </div>
+      <button class="btn wide" id="send" type="button">Send request</button>
+      <div class="message" id="msg" aria-live="polite"></div>
+    </div>
+
+    <h2>Your requests</h2>
+    <div class="card" id="history"><div class="loading">Loading requests…</div></div>
+  </main>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<a class="help-fab" href="helpdesk.html">Get help</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=community-v1"></script>
+<script src="assets/app.js?v=community-v1"></script>
+<script>
+(async function(){
+  try{
+    await SS.requireMember('');
+    async function history(){
+      var r=await SS.client.from('help_requests').select('*').eq('requester_member_id',SS.ctx.member.id).order('created_at',{ascending:false});
+      if(r.error)throw r.error;
+      SS.$('history').innerHTML=(r.data||[]).length?(r.data||[]).map(function(x){
+        return '<div class="request"><div class="status-line"><div class="request-title">'+SS.esc(x.need)+'</div><span class="chip yellow">'+SS.esc(x.status)+'</span></div>'+
+          '<div class="request-meta">'+SS.esc(SS.fmtDate(x.created_at))+'</div>'+
+          (x.desired_outcome?'<div class="tiny" style="margin-top:7px"><strong>Goal:</strong> '+SS.esc(x.desired_outcome)+'</div>':'')+
+        '</div>';
+      }).join(''):'<div class="empty">You have not sent a request yet.</div>';
+    }
+
+    SS.$('send').addEventListener('click',async function(){
+      var need=SS.$('need').value.trim(),outcome=SS.$('outcome').value.trim(),notes=SS.$('notes').value.trim();
+      if(need.length<5){SS.$('msg').textContent='Tell us what is stuck first.';SS.$('msg').className='message bad';return;}
+      var btn=this;btn.disabled=true;btn.textContent='Sending…';
+      var r=await SS.client.from('help_requests').insert({
+        requester_member_id:SS.ctx.member.id,
+        business_id:SS.ctx.business?SS.ctx.business.id:null,
+        need:need,desired_outcome:outcome||null,notes:notes||null,
+        preferred_contact:SS.$('contact').value
+      });
+      btn.disabled=false;btn.textContent='Send request';
+      if(r.error){SS.$('msg').textContent=r.error.message;SS.$('msg').className='message bad';return;}
+      SS.$('need').value='';SS.$('outcome').value='';SS.$('notes').value='';
+      SS.$('msg').textContent='Sent. Seek & Scale has it.';SS.$('msg').className='message good';
+      await history();
+    });
+    await history();
+  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('history',e.message);}
+})();
 </script></body></html>

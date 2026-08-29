@@ -2,42 +2,144 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111"><title>Resources · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="assets/app.css?v=community-content1"><link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+<style>
+.resource-hero{border:1.5px solid #111;border-radius:20px;padding:18px;margin-bottom:16px;background:#fff}
+.resource-hero strong{font-size:18px;letter-spacing:-.015em}
+.resource-filters{display:flex;gap:7px;overflow:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.resource-filters::-webkit-scrollbar{display:none}
+.rf{white-space:nowrap;border:1px solid #D8D8D8;background:#fff;border-radius:999px;padding:7px 11px;font:inherit;font-size:12px;font-weight:760;cursor:pointer}
+.rf.on{background:#111;color:#fff;border-color:#111}
+.resource-grid{display:grid;gap:10px}
+.resource-card{border:1px solid #E4E4E4;border-radius:17px;background:#fff;overflow:hidden}
+.resource-card[open]{border-color:#BDBDBD}
+.resource-summary{list-style:none;cursor:pointer;padding:15px 16px;display:flex;align-items:flex-start;gap:12px}
+.resource-summary::-webkit-details-marker{display:none}
+.resource-summary-main{flex:1;min-width:0}
+.resource-title{font-size:15px;font-weight:820;letter-spacing:-.012em;line-height:1.25}
+.resource-meta{display:flex;gap:7px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.resource-plus{font-size:20px;line-height:1;color:#777;transition:.15s transform}
+.resource-card[open] .resource-plus{transform:rotate(45deg)}
+.resource-content{border-top:1px solid #EDEDED;padding:15px 16px 17px}
+.resource-text{white-space:pre-wrap;font-size:14px;line-height:1.58;color:#222}
+.resource-actions{display:flex;justify-content:flex-end;margin-top:14px}
+</style>
 </head><body>
 <header class="top" id="top"></header>
 <div class="shell">
   <aside class="side" id="side"></aside>
   <main>
     <h1>Resources</h1>
-    <p class="sub">Useful things for getting unstuck and moving the business forward.</p>
-    <div class="searchbox"><input id="search" type="search" placeholder="Search resources"></div>
-    <div class="card" id="list"><div class="loading">Loading resources…</div></div>
+    <p class="sub">Simple tools for the problems service-business owners deal with every week.</p>
+
+    <div class="resource-hero">
+      <strong>Use it. Don't study it.</strong>
+      <p class="tiny" style="margin:7px 0 0">Find the problem you have, take the tool you need, and go use it in the business.</p>
+    </div>
+
+    <div class="searchbox"><input id="search" type="search" placeholder="Search scripts, checklists, money, hiring…"></div>
+    <div class="resource-filters" id="filters"></div>
+    <div id="list"><div class="loading">Loading resources…</div></div>
   </main>
 </div>
 <nav class="tabs" id="tabs"></nav>
 <a class="help-fab" href="helpdesk.html">Get help</a>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=community-v1"></script>
+<script src="assets/app.js?v=community-content1"></script>
 <script>
 (async function(){
   try{
     await SS.requireMember('resources');
+
     var all=await SS.loadPosts(['resource'],200);
+    var selected='All';
+
+    function parts(body){
+      var text=String(body||'').trim();
+      var lines=text.split(/\r?\n/);
+      var title=(lines.shift()||'Resource').trim();
+      var bodyText=lines.join('\n').replace(/^\s+|\s+$/g,'');
+      return {title:title,body:bodyText};
+    }
+
+    var types=['All'].concat(Array.from(new Set(all.map(function(p){return p.subtype||'Other';}))).sort(function(a,b){
+      if(a==='Start Here')return -1;
+      if(b==='Start Here')return 1;
+      return a.localeCompare(b);
+    }));
+
+    SS.$('filters').innerHTML=types.map(function(t){
+      return '<button class="rf'+(t==='All'?' on':'')+'" type="button" data-filter="'+SS.esc(t)+'">'+SS.esc(t)+'</button>';
+    }).join('');
+
     function render(){
       var q=SS.$('search').value.trim().toLowerCase();
-      var rows=all.filter(function(p){return !q||((p.body||'')+' '+(p.subtype||'')).toLowerCase().indexOf(q)!==-1;});
-      SS.$('list').innerHTML=rows.length?rows.map(function(p){
-        var m=p.author||{full_name:'Seek & Scale'};
-        return '<article class="resource"><div class="status-line">'+
-          '<span class="chip yellow">'+SS.esc(p.subtype||'resource')+'</span>'+
-          '<span class="tiny">'+SS.esc(SS.fmtDate(p.created_at))+'</span></div>'+
-          '<div class="resource-body">'+SS.esc(p.body)+'</div>'+
-          '<div class="tiny">Shared by '+SS.esc(m.full_name||'Seek & Scale')+'</div></article>';
-      }).join(''):'<div class="empty">No resources here yet.</div>';
+      var rows=all.filter(function(p){
+        var x=parts(p.body);
+        var matchesType=selected==='All'||(p.subtype||'Other')===selected;
+        var hay=(x.title+' '+x.body+' '+(p.subtype||'')).toLowerCase();
+        return matchesType&&(!q||hay.indexOf(q)!==-1);
+      });
+
+      SS.$('list').innerHTML=rows.length
+        ? '<div class="resource-grid">'+rows.map(function(p){
+            var x=parts(p.body);
+            var m=p.author||{full_name:'Seek & Scale'};
+            var open=p.is_pinned?' open':'';
+            return '<details class="resource-card"'+open+'>'+
+              '<summary class="resource-summary">'+
+                '<div class="resource-summary-main">'+
+                  '<div class="resource-title">'+SS.esc(x.title)+'</div>'+
+                  '<div class="resource-meta">'+
+                    '<span class="chip '+(p.is_pinned?'yellow':'')+'">'+SS.esc(p.subtype||'Resource')+'</span>'+
+                    (p.is_pinned?'<span class="tiny">Recommended</span>':'')+
+                  '</div>'+
+                '</div>'+
+                '<div class="resource-plus">+</div>'+
+              '</summary>'+
+              '<div class="resource-content">'+
+                '<div class="resource-text">'+SS.esc(x.body)+'</div>'+
+                '<div class="resource-actions"><button class="act solid" type="button" data-copy-resource="'+SS.esc(p.id)+'">Copy</button></div>'+
+                '<div class="tiny" style="margin-top:10px">Shared by '+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
+              '</div>'+
+            '</details>';
+          }).join('')+'</div>'
+        : '<div class="card"><div class="empty">No resources match this search.</div></div>';
     }
-    SS.$('search').addEventListener('input',render);render();
-  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('list',e.message);}
+
+    SS.$('filters').addEventListener('click',function(e){
+      var b=e.target.closest('[data-filter]');
+      if(!b)return;
+      selected=b.getAttribute('data-filter');
+      document.querySelectorAll('.rf').forEach(function(x){x.classList.toggle('on',x===b);});
+      render();
+    });
+
+    SS.$('search').addEventListener('input',render);
+
+    SS.$('list').addEventListener('click',async function(e){
+      var b=e.target.closest('[data-copy-resource]');
+      if(!b)return;
+      e.preventDefault();
+      var id=b.getAttribute('data-copy-resource');
+      var p=all.find(function(x){return x.id===id;});
+      if(!p)return;
+      try{
+        await navigator.clipboard.writeText(p.body||'');
+        var old=b.textContent;
+        b.textContent='Copied';
+        setTimeout(function(){b.textContent=old;},1000);
+      }catch(err){
+        SS.toast('Could not copy this resource.');
+      }
+    });
+
+    render();
+  }catch(e){
+    if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('list',e.message);
+  }
 })();
 </script></body></html>

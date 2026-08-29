@@ -147,6 +147,7 @@
             '<div class="post-meta"><div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
             '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div></div>'+
             '<span class="chip '+((p.category==='announcement'||p.subtype==='introduction')?'yellow':'')+'">'+SS.esc(p.subtype==='introduction'?'New member':p.category)+'</span>'+
+            (p.is_pinned?'<span class="chip">Pinned</span>':'')+
           '</div>'+
           '<div class="post-body">'+SS.esc(p.body)+'</div>'+
           '<div class="post-tools"><span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+
@@ -193,6 +194,7 @@
       }
     });
 
+    await loadFeatured();
     await loadFeed();
   }catch(e){
     if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('feed',e.message);

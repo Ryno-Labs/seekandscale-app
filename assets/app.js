@@ -136,6 +136,11 @@
       throw new Error('inactive');
     }
 
+    if(mr.data.role !== 'admin' && mr.data.onboarding_complete === false){
+      location.replace('onboarding.html');
+      throw new Error('signin');
+    }
+
     var br = await sb.from('businesses')
       .select('*')
       .eq('member_id',mr.data.id)

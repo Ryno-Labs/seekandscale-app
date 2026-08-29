@@ -1,53 +1,266 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111">
-<title>Join · seek+scale.</title><link rel="stylesheet" href="assets/app.css">
-</head><body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Join · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=community4">
+<style>
+  .join-note{
+    margin:0 0 22px;
+    padding:14px 16px;
+    border:1px solid var(--line,#EDEDED);
+    border-radius:14px;
+    background:var(--surface,#F6F6F5);
+    font-size:14px;
+    line-height:1.45;
+    color:var(--muted,#5F5F5F);
+  }
+  .join-note strong{color:var(--jet,#111111)}
+  .join-msg{
+    min-height:20px;
+    margin-top:14px;
+    text-align:center;
+    font-size:13px;
+    line-height:1.4;
+  }
+  .invite-pill{
+    display:inline-block;
+    margin-top:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#FFD700;
+    color:#111111;
+    font-weight:800;
+    letter-spacing:.02em;
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
 <div class="login-wrap">
   <div class="login-logo">seek<i>+</i><br>scale.</div>
-  <p class="login-tag">Use your invite to create your member account.</p>
-  <div id="configWarning"></div>
+  <p class="login-tag">Private access for invited service-business owners.</p>
+
   <div id="form">
-    <div class="field"><label for="code">Invite code</label><input id="code" placeholder="SS-XXXXXXXX" autocapitalize="characters"></div>
-    <div class="field"><label for="name">Your name</label><input id="name" autocomplete="name" placeholder="Jared Thompson"></div>
-    <div class="field"><label for="biz">Business name</label><input id="biz" autocomplete="organization" placeholder="JLT Plumbing LLC"></div>
-    <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="you@yourshop.com"></div>
-    <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
-    <button class="btn wide" id="go">Create my account</button>
-    <p class="tiny" id="msg" style="margin-top:16px;text-align:center"></p>
-    <p class="tiny" style="text-align:center;margin-top:22px">Already have an account? <a class="linkish" href="index.html">Sign in</a></p>
+    <div class="join-note">
+      <strong>Your member profile is already set up.</strong><br>
+      Use the email tied to your invitation and create your password.
+    </div>
+
+    <div class="field">
+      <label for="code">Invite code</label>
+      <input id="code" placeholder="SS-XXXXXXXX" autocapitalize="characters" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="em">Your email</label>
+      <input id="em" type="email" autocomplete="username" placeholder="Your email">
+    </div>
+
+    <div class="field">
+      <label for="pw">Create a password</label>
+      <input id="pw" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+    </div>
+
+    <button class="btn wide" id="go" type="button" style="margin-top:8px">Create my account</button>
+
+    <p class="join-msg" id="msg" aria-live="polite"></p>
+
+    <p class="tiny" style="text-align:center;margin-top:22px">
+      Already a member?
+      <a href="index.html" style="font-weight:750;color:var(--jet);text-decoration:underline">Sign in</a>
+    </p>
   </div>
+
   <div id="confirm" hidden>
-    <div class="card flat" style="text-align:center">
-      <div style="font-size:19px;font-weight:800">Check your email.</div>
-      <p class="tiny">Supabase needs you to confirm your email. After you confirm, come back and sign in. Your invite code is saved on this device.</p>
-      <a class="btn wide" href="index.html">Go to sign in</a>
+    <div class="card flat" style="text-align:center;padding:26px 18px">
+      <div style="font-size:19px;font-weight:780;letter-spacing:-.02em">Check your email.</div>
+      <p class="tiny" style="margin:9px 0 10px">
+        Open the confirmation email we sent you. After you confirm, this invitation will finish setting up your account.
+      </p>
+      <div class="invite-pill" id="confirmCode"></div>
+    </div>
+  </div>
+
+  <div id="done" hidden>
+    <div class="card flat" style="text-align:center;padding:26px 18px">
+      <div style="font-size:19px;font-weight:780;letter-spacing:-.02em">You're in.</div>
+      <p class="tiny" id="doneText" style="margin:9px 0 18px">
+        Your account is set up and your invitation is active.
+      </p>
+      <a class="btn wide" href="home.html">Go to the app</a>
     </div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script src="assets/config.js?v=community4"></script>
 <script>
 (function(){
-  initSupabase(); if(configMessage(document.getElementById('configWarning'))){document.getElementById('go').disabled=true;return;}
-  var pre=qs('invite');if(pre)document.getElementById('code').value=pre;
-  function say(t,bad){var m=document.getElementById('msg');m.textContent=t;m.style.color=bad?'#B4302A':'var(--muted)';}
-  document.getElementById('go').onclick=async function(){
-    var btn=this,code=document.getElementById('code').value.trim(),name=document.getElementById('name').value.trim(),biz=document.getElementById('biz').value.trim(),em=document.getElementById('em').value.trim(),pw=document.getElementById('pw').value;
-    if(!code)return say('You need an invite code.',true);if(!name||!em||!pw)return say('Name, email and password are required.',true);if(pw.length<8)return say('Use at least 8 characters for your password.',true);
-    btn.disabled=true;say('Checking your invite…');
-    var val=await sb.rpc('validate_invite',{p_code:code,p_email:em});
-    if(val.error||!val.data||!val.data.ok){btn.disabled=false;return say((val.data&&val.data.error)||(val.error&&val.error.message)||'That invite is not valid.',true);}
-    localStorage.setItem('ss_pending_invite',code);
-    say('Creating your account…');
-    var redirect=location.origin+location.pathname.replace(/signup\.html.*$/,'index.html');
-    var s=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:redirect,data:{full_name:name,business_name:biz}}});
-    if(s.error){btn.disabled=false;if(/already|registered/i.test(s.error.message)){say('That email already has an account. Sign in and use this invite code.',true);}else say(s.error.message,true);return;}
-    if(!s.data.session){document.getElementById('form').hidden=true;document.getElementById('confirm').hidden=false;return;}
-    var r=await sb.rpc('redeem_invite',{p_code:code});btn.disabled=false;
-    if(r.error||!r.data||!r.data.ok)return say((r.data&&r.data.error)||(r.error&&r.error.message)||'Account made, but the invite could not be redeemed.',true);
-    localStorage.removeItem('ss_pending_invite'); location.replace('home.html');
-  };
-  document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+  'use strict';
+
+  var client = null;
+  var form = document.getElementById('form');
+  var confirmBox = document.getElementById('confirm');
+  var done = document.getElementById('done');
+  var codeInput = document.getElementById('code');
+  var emailInput = document.getElementById('em');
+  var passwordInput = document.getElementById('pw');
+  var go = document.getElementById('go');
+  var msgBox = document.getElementById('msg');
+
+  function setMsg(text, bad){
+    msgBox.textContent = text || '';
+    msgBox.style.color = bad ? '#B4302A' : 'var(--muted,#5F5F5F)';
+  }
+
+  function inviteCode(){
+    return (codeInput.value || '').trim().toUpperCase();
+  }
+
+  function inviteReturnUrl(code){
+    var base = location.origin + location.pathname;
+    return base + '?invite=' + encodeURIComponent(code);
+  }
+
+  async function claimInvite(code){
+    setMsg('Finishing your invitation…', false);
+
+    var r = await client.rpc('claim_member_invite', { p_code: code });
+
+    if(r.error) throw r.error;
+
+    if(r.data && r.data.ok === false){
+      throw new Error(r.data.error || 'This invitation could not be activated.');
+    }
+
+    var userResult = await client.auth.getUser();
+    var user = userResult && userResult.data ? userResult.data.user : null;
+    var displayName = '';
+
+    if(user){
+      var memberResult = await client
+        .from('members')
+        .select('full_name')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if(!memberResult.error && memberResult.data && memberResult.data.full_name){
+        displayName = memberResult.data.full_name;
+      }
+    }
+
+    form.hidden = true;
+    confirmBox.hidden = true;
+    done.hidden = false;
+
+    if(displayName){
+      document.getElementById('doneText').textContent =
+        'Welcome, ' + displayName + '. Your account is set up and your invitation is active.';
+    }
+  }
+
+  async function createAccount(){
+    var code = inviteCode();
+    var email = (emailInput.value || '').trim();
+    var password = passwordInput.value || '';
+
+    if(!code) return setMsg('Enter your invite code.', true);
+    if(!email) return setMsg('Enter your email.', true);
+    if(password.length < 8) return setMsg('Your password needs at least 8 characters.', true);
+
+    go.disabled = true;
+    go.textContent = 'Setting up…';
+    setMsg('', false);
+
+    try{
+      var result = await client.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          emailRedirectTo: inviteReturnUrl(code)
+        }
+      });
+
+      if(result.error) throw result.error;
+
+      if(result.data && result.data.session){
+        await claimInvite(code);
+        return;
+      }
+
+      form.hidden = true;
+      confirmBox.hidden = false;
+      document.getElementById('confirmCode').textContent = code;
+
+    }catch(err){
+      setMsg(err && err.message ? err.message : 'Could not create your account.', true);
+      go.disabled = false;
+      go.textContent = 'Create my account';
+    }
+  }
+
+  async function boot(){
+    try{
+      if(typeof initSupabase !== 'function'){
+        throw new Error('The app connection did not load.');
+      }
+
+      client = initSupabase();
+
+      if(!client){
+        throw new Error('The app connection did not start.');
+      }
+
+      var params = new URLSearchParams(location.search);
+      var pre = (params.get('invite') || '').trim().toUpperCase();
+
+      if(pre){
+        codeInput.value = pre;
+      }
+
+      var sessionResult = await client.auth.getSession();
+
+      if(sessionResult.error) throw sessionResult.error;
+
+      var session = sessionResult.data ? sessionResult.data.session : null;
+
+      if(session && pre){
+        go.disabled = true;
+        go.textContent = 'Finishing…';
+
+        try{
+          await claimInvite(pre);
+        }catch(err){
+          setMsg(err && err.message ? err.message : 'Could not activate this invitation.', true);
+          go.disabled = false;
+          go.textContent = 'Create my account';
+        }
+      }
+
+    }catch(err){
+      setMsg(err && err.message ? err.message : 'This page could not connect.', true);
+      go.disabled = true;
+    }
+  }
+
+  go.addEventListener('click', createAccount);
+
+  passwordInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') createAccount();
+  });
+
+  window.addEventListener('unhandledrejection', function(e){
+    if(!done.hidden) return;
+    var reason = e.reason && (e.reason.message || String(e.reason));
+    setMsg(reason || 'Unexpected account setup error.', true);
+  });
+
+  boot();
 })();
-</script></body></html>
+</script>
+</body>
+</html>

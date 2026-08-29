@@ -113,7 +113,7 @@
     });
 
     if(side){
-      side.insertAdjacentHTML('beforeend','<a class="side-help" href="helpdesk.html">Get help from Seek &amp; Scale</a>');
+      side.insertAdjacentHTML('beforeend','<div class="side-support"><div class="side-support-label">Seek &amp; Scale</div><a class="side-help" href="helpdesk.html"><span class="help-copy">Need help getting something done?</span><span class="arrow">→</span></a></div>');
     }
   }
 

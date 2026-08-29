@@ -108,12 +108,19 @@ h3{margin:0;font-size:18px;line-height:1.25;letter-spacing:-.015em}
   border:1.5px solid #E6C500;border-radius:999px;padding:11px 15px;font-size:13.5px;font-weight:800;
   box-shadow:0 4px 18px rgba(0,0,0,.12)}
 
-.snav{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:13px;
-  font-size:15px;font-weight:680;color:var(--muted);width:100%;margin-bottom:3px;min-height:48px}
-.snav svg{width:19px;height:19px;flex:none}
-.snav.on{background:var(--gold);color:var(--jet);font-weight:780}
-.side-help{margin-top:20px;display:block;width:100%;background:var(--gold);border-radius:14px;
-  padding:13px 14px;font-weight:800;font-size:14px}
+.snav{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+  font-size:14.5px;font-weight:670;color:var(--muted);width:100%;margin-bottom:2px;min-height:44px;
+  position:relative}
+.snav svg{width:18px;height:18px;flex:none}
+.snav.on{background:transparent;color:var(--jet);font-weight:780;box-shadow:inset 4px 0 0 var(--gold)}
+.side-support{margin-top:18px;padding:17px 12px 0;border-top:1px solid var(--line)}
+.side-support-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);
+  font-weight:780;margin-bottom:6px}
+.side-help{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;color:var(--muted);
+  font-size:13.5px;line-height:1.4;font-weight:680;padding:3px 0}
+.side-help:hover{color:var(--jet)}
+.side-help .arrow{font-size:17px;line-height:1;color:var(--jet);flex:none}
+.side-help .help-copy{display:inline;box-shadow:inset 0 -4px 0 rgba(255,215,0,.6)}
 
 .composer{padding:15px}
 .composer textarea{width:100%;border:none;outline:none;background:transparent;resize:none;

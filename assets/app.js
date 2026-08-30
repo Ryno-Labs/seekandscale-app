@@ -1,6 +1,8 @@
 (function(){
   'use strict';
 
+  var LEGAL_VERSION='2026-08-30-v1';
+
   var client = null;
   var ctx = null;
 
@@ -104,7 +106,7 @@
     if(side){
       side.insertAdjacentHTML('beforeend',
         '<div class="side-inner">'+
-          '<a class="side-brand" href="home.html" aria-label="Seek and Scale home">seek<i>+</i>scale.</a>'+
+          '<a class="side-brand stacked" href="home.html" aria-label="Seek and Scale home"><span>seek<i>+</i></span><span>scale.</span></a>'+
           '<nav class="side-nav" aria-label="Main navigation"></nav>'+
           '<div class="side-spacer"></div>'+
           '<div class="side-bottom"></div>'+
@@ -154,6 +156,11 @@
       await sb.auth.signOut();
       location.replace('index.html?state=inactive');
       throw new Error('inactive');
+    }
+
+    if(!mr.data.legal_accepted_at || mr.data.legal_version !== LEGAL_VERSION){
+      location.replace('legal-consent.html');
+      throw new Error('legal');
     }
 
     if(mr.data.role !== 'admin' && mr.data.onboarding_complete === false){
@@ -278,19 +285,29 @@
     var vr = await getClient().from('vouches').select('id,voucher_member_id,target_member_id');
     if(vr.error) throw vr.error;
 
+    var sr = await getClient().from('saved_items').select('item_id').eq('item_type','member');
+    if(sr.error) throw sr.error;
+
     var businessMap = {};
     (br.data || []).forEach(function(b){
       if(!businessMap[b.member_id] || b.is_primary) businessMap[b.member_id] = b;
     });
 
-    var countMap = {}, mine = {};
+    var countMap = {}, mine = {}, saved = {};
     (vr.data || []).forEach(function(v){
       countMap[v.target_member_id] = (countMap[v.target_member_id] || 0) + 1;
       if(ctx && v.voucher_member_id === ctx.member.id) mine[v.target_member_id] = v.id;
     });
+    (sr.data || []).forEach(function(s){ saved[s.item_id]=true; });
 
     return (mr.data || []).map(function(m){
-      return {member:m,business:businessMap[m.id] || null,vouchCount:countMap[m.id] || 0,myVouchId:mine[m.id] || null};
+      return {
+        member:m,
+        business:businessMap[m.id] || null,
+        vouchCount:countMap[m.id] || 0,
+        myVouchId:mine[m.id] || null,
+        isSaved:!!saved[m.id]
+      };
     });
   }
 
@@ -308,21 +325,21 @@
         '<div class="member-top">'+
           avatar(m,'member-avatar')+
           '<div class="member-id">'+
-            '<div class="member-name">'+escapeHtml(m.full_name)+'</div>'+
-            '<div class="member-biz">'+escapeHtml(businessLine(m,b))+'</div>'+
-            '<div class="member-subline">'+escapeHtml([b.trade,b.city].filter(Boolean).join(' · '))+'</div>'+
-          '</div>'+
+            '<div class="member-name">'+escapeHtml(m.full_name)+'</div>'+ 
+            '<div class="member-biz">'+escapeHtml(b.name || m.headline || '')+'</div>'+ 
+            '<div class="member-subline">'+escapeHtml([b.trade,b.city].filter(Boolean).join(' · '))+'</div>'+ 
+          '</div>'+ 
           (own?'<span class="chip yellow">You</span>':'')+
-        '</div>'+
+        '</div>'+ 
         (helps?'<div class="member-help"><span>Can help with</span><p>'+escapeHtml(helps)+'</p></div>':
           (does?'<div class="member-help"><span>What they do</span><p>'+escapeHtml(does)+'</p></div>':''))+
         '<div class="member-actions">'+
           trust+
-          (!own?'<button class="vouch'+(item.myVouchId?' on':'')+'" type="button" data-vouch-target="'+escapeHtml(m.id)+'">'+
-            (item.myVouchId?'Vouched':'Vouch')+'</button>':'')+
-          '<a class="act member-view" href="shop.html?id='+encodeURIComponent(m.id)+'">View profile</a>'+
-        '</div>'+
-      '</div>'+
+          (!own?'<button class="act quiet" type="button" data-save-item="member" data-save-id="'+escapeHtml(m.id)+'">'+(item.isSaved?'Saved':'Save')+'</button>':'')+
+          (!own?'<button class="vouch'+(item.myVouchId?' on':'')+'" type="button" data-vouch-target="'+escapeHtml(m.id)+'">'+(item.myVouchId?'Vouched':'Vouch')+'</button>':'')+
+          '<a class="act member-view" href="shop.html?id='+encodeURIComponent(m.id)+'">View profile</a>'+ 
+        '</div>'+ 
+      '</div>'+ 
     '</article>';
   }
 
@@ -438,6 +455,94 @@
     return labels[value] || '';
   }
 
+  async function loadSavedSet(){
+    var r=await getClient().from('saved_items').select('item_type,item_id');
+    if(r.error) throw r.error;
+    var set=new Set();
+    (r.data||[]).forEach(function(x){ set.add(x.item_type+':'+x.item_id); });
+    return set;
+  }
+
+  async function toggleSave(itemType,itemId){
+    var r=await getClient().rpc('toggle_saved_item',{p_item_type:itemType,p_item_id:itemId});
+    if(r.error) throw r.error;
+    return !!(r.data && r.data.saved);
+  }
+
+  function cleanUrl(value){
+    var v=String(value||'').trim();
+    if(!v)return '';
+    if(!/^https?:\/\//i.test(v))v='https://'+v;
+    try{
+      var u=new URL(v);
+      if(u.protocol!=='http:'&&u.protocol!=='https:')return '';
+      return u.href;
+    }catch(e){return '';}
+  }
+
+  function linkHost(value){
+    try{return new URL(cleanUrl(value)).hostname.replace(/^www\./,'');}
+    catch(e){return String(value||'');}
+  }
+
+  async function uploadCommunityFile(file){
+    if(!ctx)throw new Error('Not signed in.');
+    if(!file)throw new Error('Choose a file.');
+    var kind='';
+    if(file.type==='application/pdf')kind='pdf';
+    if(['image/jpeg','image/png','image/webp'].indexOf(file.type)!==-1)kind='image';
+    if(!kind)throw new Error('Use a PDF, JPG, PNG or WebP file.');
+    var max=kind==='pdf'?15*1024*1024:8*1024*1024;
+    if(file.size>max)throw new Error(kind==='pdf'?'PDF must be 15 MB or smaller.':'Image must be 8 MB or smaller.');
+    var safe=String(file.name||'file').replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-100);
+    var path=ctx.user.id+'/posts/'+Date.now()+'-'+safe;
+    var up=await getClient().storage.from('community-files').upload(path,file,{upsert:false,contentType:file.type,cacheControl:'3600'});
+    if(up.error)throw up.error;
+    return {path:path,name:file.name||safe,kind:kind};
+  }
+
+  async function resolveCommunityFile(path){
+    if(!path)return '';
+    if(/^https?:\/\//i.test(path))return path;
+    var r=await getClient().storage.from('community-files').createSignedUrl(path,60*60);
+    if(r.error)throw r.error;
+    return r.data && r.data.signedUrl ? r.data.signedUrl : '';
+  }
+
+  async function loadMemberMatches(){
+    var r=await getClient().from('member_matches')
+      .select('*')
+      .eq('member_id',ctx.member.id)
+      .eq('status','suggested')
+      .order('created_at',{ascending:false})
+      .limit(5);
+    if(r.error)throw r.error;
+    var rows=r.data||[];
+    var maps=await getMemberMaps(rows.map(function(x){return x.matched_member_id;}));
+    rows.forEach(function(x){
+      x.member=maps.members[x.matched_member_id]||null;
+      x.business=maps.businesses[x.matched_member_id]||null;
+    });
+    return rows;
+  }
+
+  async function loadRecommendations(){
+    var r=await getClient().from('recommendations')
+      .select('*')
+      .eq('status','active')
+      .order('created_at',{ascending:false})
+      .limit(300);
+    if(r.error)throw r.error;
+    var rows=r.data||[];
+    var maps=await getMemberMaps(rows.map(function(x){return x.recommended_by_member_id;}));
+    rows.forEach(function(x){x.recommender=maps.members[x.recommended_by_member_id]||null;});
+    return rows;
+  }
+
+  function opportunityTypeLabel(value){
+    return ({work:'Work',referral:'Referral',hiring:'Hiring',talent:'Talent available',need:'Need / request'})[value] || 'Opportunity';
+  }
+
   function socialHref(value){
     var v = String(value || '').trim();
     if(!v) return '';
@@ -512,6 +617,15 @@
     opportunityMatchScore:opportunityMatchScore,
     loadOpportunities:loadOpportunities,
     opportunityOutcomeLabel:opportunityOutcomeLabel,
+    opportunityTypeLabel:opportunityTypeLabel,
+    loadSavedSet:loadSavedSet,
+    toggleSave:toggleSave,
+    cleanUrl:cleanUrl,
+    linkHost:linkHost,
+    uploadCommunityFile:uploadCommunityFile,
+    resolveCommunityFile:resolveCommunityFile,
+    loadMemberMatches:loadMemberMatches,
+    loadRecommendations:loadRecommendations,
     socialHref:socialHref,
     shareMember:shareMember,
     toast:toast,

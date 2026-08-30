@@ -352,6 +352,74 @@
     return {member:mr.data,business:br.data && br.data[0] ? br.data[0] : null,vouchCount:(vr.data || []).length,myVouchId:my};
   }
 
+  function norm(value){
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g,' and ')
+      .replace(/[^a-z0-9]+/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function looseMatch(a,b){
+    var aa=norm(a),bb=norm(b);
+    if(!aa || !bb) return false;
+    if(aa===bb || aa.indexOf(bb)!==-1 || bb.indexOf(aa)!==-1) return true;
+
+    var at=aa.split(' ').filter(function(x){return x.length>2;});
+    var bt=bb.split(' ').filter(function(x){return x.length>2;});
+    return at.some(function(x){return bt.indexOf(x)!==-1;});
+  }
+
+  function opportunityMatchScore(opportunity,business){
+    if(!opportunity || !business) return 0;
+    var score=0;
+    if(looseMatch(opportunity.trade_needed,business.trade)) score+=2;
+    if(looseMatch(opportunity.city,business.city)) score+=1;
+    return score;
+  }
+
+  async function loadOpportunities(statuses,limit){
+    var q=getClient().from('opportunities')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(limit || 100);
+
+    if(statuses && statuses.length) q=q.in('status',statuses);
+
+    var r=await q;
+    if(r.error) throw r.error;
+
+    var rows=r.data || [];
+    var ids=[];
+    rows.forEach(function(o){
+      if(o.poster_member_id)ids.push(o.poster_member_id);
+      if(o.claimed_by_member_id)ids.push(o.claimed_by_member_id);
+    });
+
+    var maps=await getMemberMaps(ids);
+    rows.forEach(function(o){
+      o.poster=maps.members[o.poster_member_id] || null;
+      o.posterBusiness=maps.businesses[o.poster_member_id] || null;
+      o.claimer=maps.members[o.claimed_by_member_id] || null;
+      o.claimerBusiness=maps.businesses[o.claimed_by_member_id] || null;
+    });
+    return rows;
+  }
+
+  function opportunityOutcomeLabel(value){
+    var labels={
+      work_connected:'Work connected',
+      referral_made:'Referral made',
+      hire_made:'Hire made',
+      connection_made:'Connection made',
+      no_outcome:'No outcome',
+      cancelled:'Cancelled',
+      other:'Other'
+    };
+    return labels[value] || '';
+  }
+
   function socialHref(value){
     var v = String(value || '').trim();
     if(!v) return '';
@@ -421,6 +489,11 @@
     memberCard:memberCard,
     toggleVouch:toggleVouch,
     getMember:getMember,
+    norm:norm,
+    looseMatch:looseMatch,
+    opportunityMatchScore:opportunityMatchScore,
+    loadOpportunities:loadOpportunities,
+    opportunityOutcomeLabel:opportunityOutcomeLabel,
     socialHref:socialHref,
     shareMember:shareMember,
     toast:toast,

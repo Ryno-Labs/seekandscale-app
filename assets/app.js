@@ -87,9 +87,7 @@
         '<a class="logo" href="home.html">seek<i>+</i><br>scale.</a>'+
         '<div class="top-right">'+
           '<a class="pill" href="helpdesk.html">Get help</a>'+
-          '<div class="whoami"><span class="nm">'+escapeHtml(member.full_name)+'</span>'+
-          '<span class="bz">'+escapeHtml(business ? business.name : (member.headline || 'Member'))+'</span></div>'+
-          '<a class="me-av" href="me.html">'+
+          '<a class="me-av" href="me.html" aria-label="My profile">'+
             (member.profile_photo_url ? '<img src="'+escapeHtml(member.profile_photo_url)+'" alt="">' : escapeHtml(initials(member.full_name)))+
           '</a>'+
         '</div>';
@@ -100,12 +98,28 @@
     if(side) side.innerHTML = '';
     if(tabs) tabs.innerHTML = '';
 
+    var meIcon = NAV.filter(function(n){return n.id==='me';})[0].icon;
+    var helpIcon = '<path d="M12 3.8a8.2 8.2 0 1 0 0 16.4 8.2 8.2 0 0 0 0-16.4Z"/><path d="M9.7 9.2a2.45 2.45 0 0 1 4.7.9c0 1.8-2.4 2-2.4 3.5"/><path d="M12 16.8h.01"/>';
+
+    if(side){
+      side.insertAdjacentHTML('beforeend',
+        '<div class="side-inner">'+
+          '<a class="side-brand" href="home.html" aria-label="Seek and Scale home">seek<i>+</i>scale.</a>'+
+          '<nav class="side-nav" aria-label="Main navigation"></nav>'+
+          '<div class="side-spacer"></div>'+
+          '<div class="side-bottom"></div>'+
+        '</div>');
+    }
+
     NAV.forEach(function(n){
-      var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+n.icon+'</svg>';
-      if(side){
-        side.insertAdjacentHTML('beforeend',
+      var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+n.icon+'</svg>';
+
+      if(side && n.id !== 'me'){
+        var nav = side.querySelector('.side-nav');
+        nav.insertAdjacentHTML('beforeend',
           '<a class="snav'+(n.id===active?' on':'')+'" href="'+n.href+'">'+svg+'<span>'+n.label+'</span></a>');
       }
+
       if(tabs){
         tabs.insertAdjacentHTML('beforeend',
           '<a class="tab'+(n.id===active?' on':'')+'" href="'+n.href+'"><span class="ic">'+svg+'</span><span class="lab">'+n.label+'</span></a>');
@@ -113,7 +127,13 @@
     });
 
     if(side){
-      side.insertAdjacentHTML('beforeend','<div class="side-support"><div class="side-support-label">Seek &amp; Scale</div><a class="side-help" href="helpdesk.html"><span class="help-copy">Need help getting something done?</span><span class="arrow">→</span></a></div>');
+      var bottom = side.querySelector('.side-bottom');
+      var helpSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+helpIcon+'</svg>';
+      var meSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+meIcon+'</svg>';
+
+      bottom.insertAdjacentHTML('beforeend',
+        '<a class="snav" href="helpdesk.html">'+helpSvg+'<span>Get help</span></a>'+
+        '<a class="snav'+(active==='me'?' on':'')+'" href="me.html">'+meSvg+'<span>Profile</span></a>');
     }
   }
 
@@ -276,33 +296,31 @@
 
   function memberCard(item){
     var m = item.member, b = item.business || {};
-    var color = safeColor(b.brand_color);
-    var does = b.what_they_do || m.bio || '';
     var helps = b.helps_with || '';
+    var does = b.what_they_do || m.bio || '';
     var own = ctx && m.id === ctx.member.id;
+    var trust = item.vouchCount >= 3
+      ? '<span class="member-trust">Vouched for by '+item.vouchCount+' members</span>'
+      : '';
 
     return '<article class="member-card" data-member-card="'+escapeHtml(m.id)+'">'+
-      '<div class="band" style="background:'+color+'"></div>'+
       '<div class="inside">'+
         '<div class="member-top">'+
-          avatar(m)+
+          avatar(m,'member-avatar')+
           '<div class="member-id">'+
             '<div class="member-name">'+escapeHtml(m.full_name)+'</div>'+
             '<div class="member-biz">'+escapeHtml(businessLine(m,b))+'</div>'+
-            '<div class="member-tags">'+
-              (b.trade?'<span class="chip">'+escapeHtml(b.trade)+'</span>':'')+
-              (own?'<span class="chip yellow">You</span>':'')+
-            '</div>'+
+            '<div class="member-subline">'+escapeHtml([b.trade,b.city].filter(Boolean).join(' · '))+'</div>'+
           '</div>'+
+          (own?'<span class="chip yellow">You</span>':'')+
         '</div>'+
-        ((does || helps) ? '<div class="member-summary">'+
-          (does?'<div class="qa-label">What they do</div><p class="qa-copy">'+escapeHtml(does)+'</p>':'')+
-          (helps?'<div class="qa-label">How they can help</div><p class="qa-copy">'+escapeHtml(helps)+'</p>':'')+
-        '</div>' : '')+
+        (helps?'<div class="member-help"><span>Can help with</span><p>'+escapeHtml(helps)+'</p></div>':
+          (does?'<div class="member-help"><span>What they do</span><p>'+escapeHtml(does)+'</p></div>':''))+
         '<div class="member-actions">'+
+          trust+
           (!own?'<button class="vouch'+(item.myVouchId?' on':'')+'" type="button" data-vouch-target="'+escapeHtml(m.id)+'">'+
-            (item.myVouchId?'Vouched':'Vouch')+' · <span>'+item.vouchCount+'</span></button>':'<span class="tiny">'+item.vouchCount+' vouches</span>')+
-          '<a class="act" style="margin-left:auto" href="shop.html?id='+encodeURIComponent(m.id)+'">View member</a>'+
+            (item.myVouchId?'Vouched':'Vouch')+'</button>':'')+
+          '<a class="act member-view" href="shop.html?id='+encodeURIComponent(m.id)+'">View profile</a>'+
         '</div>'+
       '</div>'+
     '</article>';

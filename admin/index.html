@@ -607,7 +607,7 @@ h2{
           </div>
           <div class="stat">
             <div class="n" id="statPosts">—</div>
-            <div class="l">Posts</div>
+            <div class="l">Open opportunities</div>
           </div>
           <div class="stat">
             <div class="n" id="statHelp">—</div>
@@ -667,10 +667,57 @@ h2{
         </div>
       </section>
 
+      <!-- OPPORTUNITIES -->
+      <section class="view" id="view-opportunities">
+        <h1>Opportunities</h1>
+        <p class="sub">Keep real work and connections moving. Open items should not quietly die.</p>
+
+        <div class="toolbar">
+          <select class="sel" id="adminOpportunityStatus">
+            <option value="">All statuses</option>
+            <option value="open">Open</option>
+            <option value="claimed">Claimed</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <div class="card" id="adminOpportunityList">
+          <div class="empty">Loading opportunities…</div>
+        </div>
+      </section>
+
       <!-- POSTS -->
       <section class="view" id="view-posts">
         <h1>Posts</h1>
-        <p class="sub">Community discussions, questions, wins, opportunities and announcements.</p>
+        <p class="sub">Start useful conversations as Seek &amp; Scale. Do not manufacture member activity.</p>
+
+        <div class="card yellow" style="padding:16px;margin-bottom:14px">
+          <div class="eyebrow">Post to the room</div>
+          <div class="grid2" style="margin-top:12px">
+            <div class="field">
+              <label for="adminPostType">Type</label>
+              <select id="adminPostType">
+                <option value="announcement">Announcement</option>
+                <option value="question">Question</option>
+                <option value="discussion">Discussion</option>
+                <option value="win">Win</option>
+                <option value="opportunity">Opportunity</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="adminPostSubtype">Label (optional)</label>
+              <input id="adminPostSubtype" placeholder="weekly-focus">
+            </div>
+          </div>
+          <div class="field">
+            <label for="adminPostBody">Post</label>
+            <textarea id="adminPostBody" maxlength="4000" placeholder="Write something useful to the room…"></textarea>
+          </div>
+          <div class="checkrow"><label><input type="checkbox" id="adminPostPinned"> Pin to the top</label></div>
+          <button class="btn sm" id="adminPostBtn" type="button">Publish post</button>
+          <div id="adminPostMessage" class="message"></div>
+        </div>
+
         <div class="card" id="postList">
           <div class="empty">Loading posts…</div>
         </div>
@@ -679,7 +726,41 @@ h2{
       <!-- RESOURCES -->
       <section class="view" id="view-resources">
         <h1>Resources</h1>
-        <p class="sub">Useful resources shared with members.</p>
+        <p class="sub">Build a small library of things owners can actually use.</p>
+
+        <div class="card yellow" style="padding:16px;margin-bottom:14px">
+          <div class="eyebrow">Add a resource</div>
+          <div class="grid2" style="margin-top:12px">
+            <div class="field">
+              <label for="adminResourceType">Category</label>
+              <select id="adminResourceType">
+                <option>Start Here</option>
+                <option>Owner</option>
+                <option>Leads</option>
+                <option>Sales</option>
+                <option>Money</option>
+                <option>Team</option>
+                <option>Systems</option>
+                <option>Marketing</option>
+                <option>Reviews</option>
+                <option>Referrals</option>
+                <option>Customer</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="adminResourceTitle">Title</label>
+              <input id="adminResourceTitle" placeholder="Missed Call Text-Back Script">
+            </div>
+          </div>
+          <div class="field">
+            <label for="adminResourceBody">Resource</label>
+            <textarea id="adminResourceBody" maxlength="12000" placeholder="Write the script, checklist, or framework…"></textarea>
+          </div>
+          <div class="checkrow"><label><input type="checkbox" id="adminResourcePinned"> Recommend / pin this resource</label></div>
+          <button class="btn sm" id="adminResourceBtn" type="button">Publish resource</button>
+          <div id="adminResourceMessage" class="message"></div>
+        </div>
+
         <div class="card" id="resourceList">
           <div class="empty">Loading resources…</div>
         </div>
@@ -911,6 +992,7 @@ h2{
   var NAV = [
     ['overview','Overview'],
     ['members','Members'],
+    ['opportunities','Opportunities'],
     ['posts','Posts'],
     ['resources','Resources'],
     ['help','Get Help Requests'],
@@ -1013,6 +1095,7 @@ h2{
 
     if(name === 'overview') await loadDashboard();
     if(name === 'members') await loadMembers();
+    if(name === 'opportunities') await loadAdminOpportunities();
     if(name === 'posts') await loadPosts(false);
     if(name === 'resources') await loadPosts(true);
     if(name === 'help') await loadHelp();
@@ -1107,7 +1190,7 @@ h2{
     try{
       var results = await Promise.all([
         countRows('members', function(q){ return q.eq('status','active'); }),
-        countRows('posts', function(q){ return q.is('deleted_at',null); }),
+        countRows('opportunities', function(q){ return q.eq('status','open'); }),
         countRows('help_requests', function(q){ return q.in('status',['new','contacted','scoping','in_progress']); })
       ]);
       $('statMembers').textContent = results[0];
@@ -1640,6 +1723,80 @@ h2{
   }
 
 
+  async function loadAdminOpportunities(){
+    var status=$('adminOpportunityStatus').value;
+    var q=client.from('opportunities')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(200);
+
+    if(status)q=q.eq('status',status);
+
+    var r=await q;
+    if(r.error){
+      $('adminOpportunityList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>';
+      return;
+    }
+
+    var rows=r.data||[];
+    var ids=[];
+    rows.forEach(function(o){
+      if(o.poster_member_id)ids.push(o.poster_member_id);
+      if(o.claimed_by_member_id)ids.push(o.claimed_by_member_id);
+    });
+    ids=Array.from(new Set(ids));
+
+    var map={};
+    if(ids.length){
+      var mr=await client.from('members').select('id,full_name').in('id',ids);
+      if(mr.error)throw mr.error;
+      (mr.data||[]).forEach(function(m){map[m.id]=m.full_name;});
+    }
+
+    $('adminOpportunityList').innerHTML=rows.length?rows.map(function(o){
+      return '<div class="row">'+
+        '<div class="rd">'+
+          '<div class="rt">'+esc(o.need)+'</div>'+
+          '<div class="rs">'+esc(o.trade_needed)+' · '+esc(o.city)+' · '+esc(o.timing)+
+            '<br>Posted by '+esc(map[o.poster_member_id]||'Member')+
+            (o.claimed_by_member_id?' · Claimed by '+esc(map[o.claimed_by_member_id]||'Member'):'')+
+          '</div>'+
+          '<div class="ra">'+
+            '<span class="chip '+(o.status==='open'?'active':'')+'">'+esc(o.status)+'</span>'+
+            (o.outcome?'<span class="chip">'+esc(String(o.outcome).replace(/_/g,' '))+'</span>':'')+
+            '<span class="tiny">'+esc(fmtDate(o.created_at))+'</span>'+
+            (o.status==='claimed'?'<button class="mini" data-admin-release-opportunity="'+esc(o.id)+'">Release</button>':'')+
+            (o.status==='closed'?'<button class="mini" data-admin-reopen-opportunity="'+esc(o.id)+'">Reopen</button>':'')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join(''):'<div class="empty">No opportunities in this status.</div>';
+  }
+
+  async function adminReleaseOpportunity(id){
+    if(!confirm('Release this claim and make the opportunity open again?'))return;
+    try{
+      var r=await client.rpc('release_opportunity',{p_opportunity_id:id});
+      if(r.error)throw r.error;
+      await loadAdminOpportunities();
+      await loadDashboard();
+    }catch(err){
+      message($('pageMessage'),err.message||'Could not release opportunity.','bad');
+    }
+  }
+
+  async function adminReopenOpportunity(id){
+    if(!confirm('Reopen this opportunity?'))return;
+    try{
+      var r=await client.rpc('reopen_opportunity',{p_opportunity_id:id});
+      if(r.error)throw r.error;
+      await loadAdminOpportunities();
+      await loadDashboard();
+    }catch(err){
+      message($('pageMessage'),err.message||'Could not reopen opportunity.','bad');
+    }
+  }
+
   async function loadPosts(resourcesOnly){
     var target = resourcesOnly ? $('resourceList') : $('postList');
 
@@ -1647,10 +1804,11 @@ h2{
       .from('posts')
       .select('id,category,subtype,body,status,is_pinned,created_at,deleted_at,author_member_id')
       .is('deleted_at',null)
+      .order('is_pinned',{ascending:false})
       .order('created_at',{ascending:false})
-      .limit(100);
+      .limit(150);
 
-    if(resourcesOnly) q = q.eq('category','resource');
+    q = resourcesOnly ? q.eq('category','resource') : q.neq('category','resource');
 
     var r = await q;
     if(r.error){
@@ -1667,18 +1825,126 @@ h2{
     }
 
     target.innerHTML = rows.map(function(p){
+      var first = String(p.body || '').split(/\r?\n/)[0] || 'Untitled';
+      var summary = resourcesOnly ? first : String(p.body || '');
       return '<div class="row">' +
         '<div class="rd">' +
-          '<div class="rt">' + esc(p.category) + (p.is_pinned ? ' · Pinned' : '') + '</div>' +
-          '<div class="rs">' + esc(p.body) + '</div>' +
+          '<div class="rt">' +
+            esc(resourcesOnly ? (p.subtype || 'Resource') : p.category) +
+            (p.is_pinned ? ' · Pinned' : '') +
+          '</div>' +
+          '<div class="rs">' + esc(summary) + '</div>' +
           '<div class="ra">' +
             '<span class="chip">' + esc(p.status) + '</span>' +
             '<span class="tiny">' + esc(fmtDate(p.created_at)) + '</span>' +
+            '<button class="mini" data-toggle-pin="' + esc(p.id) + '" data-next-pin="' + (p.is_pinned ? 'false' : 'true') + '" data-resource="' + (resourcesOnly ? 'true' : 'false') + '">' +
+              (p.is_pinned ? 'Unpin' : 'Pin') +
+            '</button>' +
+            '<button class="mini" data-remove-content="' + esc(p.id) + '" data-resource="' + (resourcesOnly ? 'true' : 'false') + '">Remove</button>' +
           '</div>' +
         '</div>' +
       '</div>';
     }).join('');
   }
+
+  async function publishAdminPost(){
+    var body = $('adminPostBody').value.trim();
+    if(body.length < 4){
+      message($('adminPostMessage'),'Write the post first.','bad');
+      return;
+    }
+
+    $('adminPostBtn').disabled = true;
+    $('adminPostBtn').textContent = 'Publishing…';
+    message($('adminPostMessage'),'','');
+
+    try{
+      var r = await client.from('posts').insert({
+        author_member_id:adminMember.id,
+        category:$('adminPostType').value,
+        subtype:$('adminPostSubtype').value.trim() || null,
+        body:body,
+        status:'published',
+        is_pinned:$('adminPostPinned').checked
+      });
+      if(r.error) throw r.error;
+
+      $('adminPostBody').value='';
+      $('adminPostSubtype').value='';
+      $('adminPostPinned').checked=false;
+      message($('adminPostMessage'),'Published to Home.','good');
+      await loadPosts(false);
+    }catch(err){
+      message($('adminPostMessage'),err.message || 'Could not publish post.','bad');
+    }finally{
+      $('adminPostBtn').disabled=false;
+      $('adminPostBtn').textContent='Publish post';
+    }
+  }
+
+  async function publishAdminResource(){
+    var title = $('adminResourceTitle').value.trim();
+    var body = $('adminResourceBody').value.trim();
+
+    if(!title || body.length < 4){
+      message($('adminResourceMessage'),'Add a title and useful resource content.','bad');
+      return;
+    }
+
+    $('adminResourceBtn').disabled=true;
+    $('adminResourceBtn').textContent='Publishing…';
+    message($('adminResourceMessage'),'','');
+
+    try{
+      var r = await client.from('posts').insert({
+        author_member_id:adminMember.id,
+        category:'resource',
+        subtype:$('adminResourceType').value,
+        body:title + '\\n\\n' + body,
+        status:'published',
+        is_pinned:$('adminResourcePinned').checked
+      });
+      if(r.error) throw r.error;
+
+      $('adminResourceTitle').value='';
+      $('adminResourceBody').value='';
+      $('adminResourcePinned').checked=false;
+      message($('adminResourceMessage'),'Resource published.','good');
+      await loadPosts(true);
+    }catch(err){
+      message($('adminResourceMessage'),err.message || 'Could not publish resource.','bad');
+    }finally{
+      $('adminResourceBtn').disabled=false;
+      $('adminResourceBtn').textContent='Publish resource';
+    }
+  }
+
+  async function toggleContentPin(id,nextPin,isResource){
+    try{
+      var r=await client.from('posts').update({is_pinned:nextPin}).eq('id',id);
+      if(r.error)throw r.error;
+      await loadPosts(isResource);
+    }catch(err){
+      message($('pageMessage'),err.message || 'Could not update pin.','bad');
+    }
+  }
+
+  async function removeContent(id,isResource){
+    if(!confirm('Remove this ' + (isResource ? 'resource' : 'post') + '?'))return;
+
+    try{
+      var r=await client.from('posts').update({
+        status:'hidden',
+        deleted_at:new Date().toISOString()
+      }).eq('id',id);
+      if(r.error)throw r.error;
+      message($('pageMessage'),isResource ? 'Resource removed.' : 'Post removed.','good');
+      await loadPosts(isResource);
+    }catch(err){
+      message($('pageMessage'),err.message || 'Could not remove content.','bad');
+    }
+  }
+
 
   async function loadHelp(){
     var status = $('helpStatus').value;
@@ -1819,6 +2085,45 @@ h2{
   $('memberSearch').addEventListener('input',renderMembers);
   $('memberStatus').addEventListener('change',renderMembers);
   $('helpStatus').addEventListener('change',loadHelp);
+
+  $('adminOpportunityStatus').addEventListener('change',loadAdminOpportunities);
+  $('adminOpportunityList').addEventListener('click',function(e){
+    var release=e.target.closest('[data-admin-release-opportunity]');
+    if(release){adminReleaseOpportunity(release.dataset.adminReleaseOpportunity);return;}
+    var reopen=e.target.closest('[data-admin-reopen-opportunity]');
+    if(reopen){adminReopenOpportunity(reopen.dataset.adminReopenOpportunity);}
+  });
+
+  $('adminPostBtn').addEventListener('click',publishAdminPost);
+  $('adminResourceBtn').addEventListener('click',publishAdminResource);
+
+  $('postList').addEventListener('click',function(e){
+    var pin=e.target.closest('[data-toggle-pin]');
+    if(pin){
+      toggleContentPin(
+        pin.getAttribute('data-toggle-pin'),
+        pin.getAttribute('data-next-pin')==='true',
+        false
+      );
+      return;
+    }
+    var remove=e.target.closest('[data-remove-content]');
+    if(remove) removeContent(remove.getAttribute('data-remove-content'),false);
+  });
+
+  $('resourceList').addEventListener('click',function(e){
+    var pin=e.target.closest('[data-toggle-pin]');
+    if(pin){
+      toggleContentPin(
+        pin.getAttribute('data-toggle-pin'),
+        pin.getAttribute('data-next-pin')==='true',
+        true
+      );
+      return;
+    }
+    var remove=e.target.closest('[data-remove-content]');
+    if(remove) removeContent(remove.getAttribute('data-remove-content'),true);
+  });
 
   bindPreview('profilePhoto','profilePreview');
   bindPreview('businessLogo','logoPreview');

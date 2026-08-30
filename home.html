@@ -5,114 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
 <title>Home · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=outcome1">
+<link rel="stylesheet" href="assets/app.css?v=ux2">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/favicon-32.png">
-<style>
-  .action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 20px}
-  .action-row .primary-action:first-child{grid-column:1/-1}
-  .primary-action{display:block;text-align:left;border:1.5px solid #111;border-radius:16px;background:#fff;padding:14px;font:inherit;cursor:pointer}
-  .primary-action strong{display:block;font-size:14px}
-  .primary-action span{display:block;font-size:11.5px;color:#666;margin-top:4px;line-height:1.35}
-  .primary-action.yellow{background:#FFD700}
-  .compose-panel{border:1.5px solid #111;border-radius:18px;padding:16px;margin:-8px 0 20px;background:#fff}
-  .compose-panel[hidden]{display:none}
-  .home-section{margin-top:22px}
-  .section-head{display:flex;align-items:flex-end;gap:10px;margin-bottom:9px}
-  .section-head h2{margin:0;flex:1}
-  .opp-mini{border:1px solid #E4E4E4;border-radius:16px;padding:14px;margin-bottom:8px;background:#fff}
-  .opp-mini.hot{border-color:#111}
-  .opp-title{font-weight:820;font-size:15px;line-height:1.3}
-  .opp-meta{font-size:11.5px;color:#666;margin-top:5px}
-  .opp-tools{display:flex;gap:7px;align-items:center;margin-top:11px;flex-wrap:wrap}
-  .match{display:inline-flex;background:#FFD700;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:800;text-transform:uppercase}
-  .feed-post{margin:0;border-bottom:1px solid #EDEDED;padding:15px 0}
-  .feed-post:last-child{border-bottom:0}
-  .card.feed-shell{padding:0 16px}
-  .empty-action{padding:17px;text-align:left}
-  .empty-action strong{display:block;margin-bottom:5px}
-  @media(min-width:680px){.action-row{grid-template-columns:1.4fr 1fr 1fr}.action-row .primary-action:first-child{grid-column:auto}}
-</style>
 </head>
 <body>
 <header class="top" id="top"></header>
+
 <div class="shell">
   <aside class="side" id="side"></aside>
-  <main>
-    <h1>For you</h1>
-    <p class="sub">What needs your attention in the network right now.</p>
 
-    <div class="action-row">
-      <button class="primary-action yellow" id="askAction" type="button">
-        <strong>Ask the room</strong>
-        <span>Get unstuck with a specific question.</span>
-      </button>
-      <a class="primary-action" href="opportunities.html#new">
-        <strong>Post an opportunity</strong>
-        <span>Work, referral, hire or person needed.</span>
-      </a>
-      <button class="primary-action" id="winAction" type="button">
-        <strong>Share a win</strong>
-        <span>Tell the room what worked.</span>
-      </button>
+  <main>
+    <div class="compact-page-head">
+      <div class="head-copy">
+        <h1>For you</h1>
+        <p class="sub">What needs your attention right now.</p>
+      </div>
+      <button class="btn sm post-button" id="openPost" type="button">+ Post</button>
     </div>
 
-    <section class="compose-panel" id="askPanel" hidden>
-      <div class="eyebrow">Ask the room</div>
-      <h2 style="margin:6px 0 12px">Make it easy to help you.</h2>
-      <div class="field">
-        <label for="stuck">What is stuck?</label>
-        <textarea id="stuck" maxlength="2000" placeholder="What problem are you trying to solve?"></textarea>
-      </div>
-      <div class="field">
-        <label for="tried">What have you tried?</label>
-        <textarea id="tried" maxlength="2000" placeholder="Optional, but it helps people avoid repeating what you already tried."></textarea>
-      </div>
-      <div class="field">
-        <label for="result">What would a good result look like?</label>
-        <textarea id="result" maxlength="2000" placeholder="What are you trying to make happen?"></textarea>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="act" id="cancelAsk" type="button">Cancel</button>
-        <button class="btn sm" id="postAsk" type="button" style="margin-left:auto">Ask the room</button>
-      </div>
-      <div class="message" id="askMsg"></div>
-    </section>
-
-    <section class="compose-panel" id="winPanel" hidden>
-      <div class="eyebrow">Share a win</div>
-      <h2 style="margin:6px 0 12px">What worked?</h2>
-      <div class="field">
-        <textarea id="winBody" maxlength="4000" placeholder="A fix, result or lesson that might help another owner."></textarea>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="act" id="cancelWin" type="button">Cancel</button>
-        <button class="btn sm" id="postWin" type="button" style="margin-left:auto">Share win</button>
-      </div>
-      <div class="message" id="winMsg"></div>
-    </section>
-
-    <section class="home-section">
-      <div class="section-head">
-        <h2>Opportunities that fit</h2>
-        <a class="act" href="opportunities.html">See all</a>
+    <section class="priority-block">
+      <div class="priority-head">
+        <h2>Needs you</h2>
+        <a href="opportunities.html">See all</a>
       </div>
       <div id="matchedOpps"><div class="loading">Finding relevant opportunities…</div></div>
     </section>
 
-    <section class="home-section">
-      <div class="section-head">
-        <h2>Needs an answer</h2>
+    <section class="priority-block">
+      <div class="priority-head">
+        <h2>Can you help?</h2>
       </div>
-      <div class="card feed-shell" id="unanswered"><div class="loading">Finding questions…</div></div>
+      <div id="unanswered"><div class="loading">Finding questions…</div></div>
     </section>
 
-    <section class="home-section">
-      <div class="section-head">
+    <section class="priority-block">
+      <div class="priority-head">
         <h2>Around the room</h2>
       </div>
-      <div class="card feed-shell" id="room"><div class="loading">Loading the room…</div></div>
+      <div id="room"><div class="loading">Loading the room…</div></div>
     </section>
   </main>
 </div>
@@ -120,40 +52,133 @@
 <nav class="tabs" id="tabs"></nav>
 <a class="help-fab" href="helpdesk.html">Get help</a>
 
+<!-- POST CHOICE -->
+<div class="sheet-backdrop" id="postSheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="postSheetTitle">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="postSheetTitle">What do you want to do?</h2>
+      <button class="sheet-close" id="closePost" type="button" aria-label="Close">×</button>
+    </div>
+
+    <div id="choiceView">
+      <button class="post-choice" id="chooseAsk" type="button">
+        <span class="post-choice-icon">?</span>
+        <span><strong>Ask for help</strong><span>I’m stuck on something.</span></span>
+        <span class="post-choice-arrow">›</span>
+      </button>
+
+      <a class="post-choice" href="opportunities.html#new">
+        <span class="post-choice-icon">↗</span>
+        <span><strong>Post an opportunity</strong><span>Work, referral, hire or person needed.</span></span>
+        <span class="post-choice-arrow">›</span>
+      </a>
+
+      <button class="post-choice" id="chooseShare" type="button">
+        <span class="post-choice-icon">+</span>
+        <span><strong>Share something</strong><span>A win, lesson, update or useful thought.</span></span>
+        <span class="post-choice-arrow">›</span>
+      </button>
+    </div>
+
+    <div id="askView" hidden>
+      <button class="act" id="backAsk" type="button" style="margin-bottom:14px">← Back</button>
+      <div class="field">
+        <label for="stuck">What’s going on?</label>
+        <textarea id="stuck" maxlength="2000" placeholder="What are you trying to solve?"></textarea>
+      </div>
+      <div class="field">
+        <label for="tried">What have you tried? <span class="dim">(optional)</span></label>
+        <textarea id="tried" maxlength="2000" placeholder="Anything the room should know."></textarea>
+      </div>
+      <div class="field">
+        <label for="result">What would a good result look like? <span class="dim">(optional)</span></label>
+        <textarea id="result" maxlength="2000" placeholder="What are you trying to make happen?"></textarea>
+      </div>
+      <button class="btn wide" id="postAsk" type="button">Post question</button>
+      <div class="message" id="askMsg"></div>
+    </div>
+
+    <div id="shareView" hidden>
+      <button class="act" id="backShare" type="button" style="margin-bottom:14px">← Back</button>
+      <div class="field">
+        <label for="shareBody">What do you want to share?</label>
+        <textarea id="shareBody" maxlength="4000" placeholder="A win, lesson, update or useful thought."></textarea>
+      </div>
+      <button class="btn wide" id="postShare" type="button">Post</button>
+      <div class="message" id="shareMsg"></div>
+    </div>
+  </section>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=outcome1"></script>
+<script src="assets/app.js?v=ux2"></script>
 <script>
 (async function(){
   'use strict';
 
-  function showPanel(which){
-    SS.$('askPanel').hidden=which!=='ask';
-    SS.$('winPanel').hidden=which!=='win';
-    if(which==='ask')setTimeout(function(){SS.$('stuck').focus();},0);
-    if(which==='win')setTimeout(function(){SS.$('winBody').focus();},0);
+  function openSheet(){
+    SS.$('postSheet').hidden=false;
+    showChoice();
+  }
+
+  function closeSheet(){
+    SS.$('postSheet').hidden=true;
+  }
+
+  function showChoice(){
+    SS.$('choiceView').hidden=false;
+    SS.$('askView').hidden=true;
+    SS.$('shareView').hidden=true;
+  }
+
+  function showAsk(){
+    SS.$('choiceView').hidden=true;
+    SS.$('askView').hidden=false;
+    SS.$('shareView').hidden=true;
+    setTimeout(function(){SS.$('stuck').focus();},0);
+  }
+
+  function showShare(){
+    SS.$('choiceView').hidden=true;
+    SS.$('askView').hidden=true;
+    SS.$('shareView').hidden=false;
+    setTimeout(function(){SS.$('shareBody').focus();},0);
   }
 
   function postHtml(p,rs){
     var m=p.author||{full_name:'Seek & Scale'},b=p.business||{};
     rs=rs||[];
     var label=p.subtype==='introduction'?'New member':p.category;
+
     return '<article class="feed-post" data-post="'+SS.esc(p.id)+'">'+
       '<div class="post-head">'+SS.avatar(m)+
-        '<div class="post-meta"><div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
-        '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div></div>'+
+        '<div class="post-meta">'+
+          '<div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
+          '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div>'+
+        '</div>'+
         '<span class="chip '+((p.category==='announcement'||p.subtype==='introduction')?'yellow':'')+'">'+SS.esc(label)+'</span>'+
       '</div>'+
       '<div class="post-body">'+SS.esc(p.body)+'</div>'+
-      '<div class="post-tools"><span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+
-      (p.author_member_id===SS.ctx.member.id?'<button class="act danger" type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>':'')+
+      '<div class="post-tools">'+
+        '<span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+
+        (p.author_member_id===SS.ctx.member.id
+          ? '<button class="act danger" type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>'
+          : '')+
       '</div>'+
       '<div class="reply-list">'+
         rs.map(function(r){
           var rm=r.author||{full_name:'Member'};
-          return '<div class="reply"><div class="reply-name">'+SS.esc(rm.full_name||'Member')+'</div><div class="reply-body">'+SS.esc(r.body)+'</div></div>';
+          return '<div class="reply">'+
+            '<div class="reply-name">'+SS.esc(rm.full_name||'Member')+'</div>'+
+            '<div class="reply-body">'+SS.esc(r.body)+'</div>'+
+          '</div>';
         }).join('')+
-        '<div class="reply-form"><input data-reply-input="'+SS.esc(p.id)+'" placeholder="Write a useful reply..." maxlength="2000"><button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button></div>'+
+        '<div class="reply-form">'+
+          '<input data-reply-input="'+SS.esc(p.id)+'" placeholder="Write a useful reply..." maxlength="2000">'+
+          '<button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button>'+
+        '</div>'+
       '</div>'+
     '</article>';
   }
@@ -162,95 +187,121 @@
     var rows=await SS.loadOpportunities(['open'],80);
     rows=rows.filter(function(o){return o.poster_member_id!==SS.ctx.member.id;});
 
-    rows.forEach(function(o){o._score=SS.opportunityMatchScore(o,SS.ctx.business);});
-    rows=rows.filter(function(o){return o._score>=2;});
-    rows.sort(function(a,b){
-      if(b._score!==a._score)return b._score-a._score;
-      return new Date(b.created_at)-new Date(a.created_at);
+    rows.forEach(function(o){
+      o._score=SS.opportunityMatchScore(o,SS.ctx.business);
     });
-    rows=rows.slice(0,3);
+
+    rows=rows
+      .filter(function(o){return o._score>=2;})
+      .sort(function(a,b){
+        if(b._score!==a._score)return b._score-a._score;
+        return new Date(b.created_at)-new Date(a.created_at);
+      })
+      .slice(0,3);
 
     if(!rows.length){
       SS.$('matchedOpps').innerHTML=
-        '<div class="card empty-action"><strong>No matching opportunity right now.</strong>'+
-        '<div class="tiny">Real opportunities only. Browse the full board or check the members who are here.</div>'+
-        '<div style="display:flex;gap:8px;margin-top:11px"><a class="act solid" href="opportunities.html">Open opportunities</a><a class="act" href="directory.html">Members</a></div></div>';
+        '<div class="priority-list">'+
+          '<div class="priority-item">'+
+            '<div class="priority-item-title">Nothing matching you right now.</div>'+
+            '<div class="priority-item-meta">Real opportunities only. Browse the full board or see who is in the network.</div>'+
+            '<div class="priority-item-tools">'+
+              '<a class="act" href="opportunities.html">Open opportunities</a>'+
+              '<a class="act" href="directory.html">Members</a>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
       return;
     }
 
-    SS.$('matchedOpps').innerHTML=rows.map(function(o){
-      var poster=o.poster||{full_name:'Member'};
-      return '<article class="opp-mini hot">'+
-        '<div class="opp-title">'+SS.esc(o.need)+'</div>'+
-        '<div class="opp-meta">'+SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+' · '+SS.esc(poster.full_name)+'</div>'+
-        '<div class="opp-tools">'+
-          '<span class="match">'+(o._score>=3?'Strong match':'Trade match')+'</span>'+
-          '<button class="act solid" type="button" data-claim-opportunity="'+SS.esc(o.id)+'">Claim</button>'+
-          '<a class="act" href="opportunities.html">Details</a>'+
-        '</div>'+
-      '</article>';
-    }).join('');
+    SS.$('matchedOpps').innerHTML=
+      '<div class="priority-list">'+
+      rows.map(function(o){
+        var poster=o.poster||{full_name:'Member'};
+        return '<article class="priority-item">'+
+          '<div class="priority-item-title">'+SS.esc(o.need)+'</div>'+
+          '<div class="priority-item-meta">'+
+            SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+' · '+SS.esc(poster.full_name)+
+          '</div>'+
+          '<div class="priority-item-tools">'+
+            '<span class="chip yellow">'+(o._score>=3?'Strong match':'Trade match')+'</span>'+
+            '<button class="act solid" type="button" data-claim-opportunity="'+SS.esc(o.id)+'">Claim</button>'+
+            '<a class="act" href="opportunities.html">Details</a>'+
+          '</div>'+
+        '</article>';
+      }).join('')+
+      '</div>';
   }
 
   async function loadCommunity(){
     var posts=await SS.loadPosts(['discussion','question','win','announcement'],80);
     var replies=await SS.loadReplies(posts.map(function(p){return p.id;}));
     var byPost={};
-    replies.forEach(function(r){(byPost[r.post_id]||(byPost[r.post_id]=[])).push(r);});
+
+    replies.forEach(function(r){
+      (byPost[r.post_id]||(byPost[r.post_id]=[])).push(r);
+    });
 
     var unanswered=posts.filter(function(p){
       return p.category==='question' && (byPost[p.id]||[]).length===0;
     }).slice(0,3);
 
     SS.$('unanswered').innerHTML=unanswered.length
-      ? unanswered.map(function(p){return postHtml(p,[]);}).join('')
-      : '<div class="empty"><strong>The room is caught up.</strong><br>No unanswered questions right now.</div>';
+      ? '<div class="priority-list">'+unanswered.map(function(p){return postHtml(p,[]);}).join('')+'</div>'
+      : '<div class="priority-list"><div class="priority-item"><div class="priority-item-title">The room is caught up.</div><div class="priority-item-meta">No unanswered questions right now.</div></div></div>';
 
     var unansweredIds={};
     unanswered.forEach(function(p){unansweredIds[p.id]=true;});
 
-    var around=posts.filter(function(p){
-      return !unansweredIds[p.id];
-    }).sort(function(a,b){
-      if(!!a.is_pinned!==!!b.is_pinned)return a.is_pinned?-1:1;
-      var ar=(byPost[a.id]||[]).length,br=(byPost[b.id]||[]).length;
-      if(a.category==='question'&&b.category==='question'&&ar!==br)return ar-br;
-      return new Date(b.created_at)-new Date(a.created_at);
-    }).slice(0,25);
+    var around=posts
+      .filter(function(p){return !unansweredIds[p.id];})
+      .sort(function(a,b){
+        if(!!a.is_pinned!==!!b.is_pinned)return a.is_pinned?-1:1;
+        return new Date(b.created_at)-new Date(a.created_at);
+      })
+      .slice(0,25);
 
     SS.$('room').innerHTML=around.length
-      ? around.map(function(p){return postHtml(p,byPost[p.id]||[]);}).join('')
-      : '<div class="empty"><strong>The room is new.</strong><br><a href="directory.html" style="text-decoration:underline">See who is here</a> and start with a real question when you need one.</div>';
-  }
-
-  async function reload(){
-    await Promise.all([loadMatchedOpportunities(),loadCommunity()]);
+      ? '<div class="priority-list">'+around.map(function(p){return postHtml(p,byPost[p.id]||[]);}).join('')+'</div>'
+      : '<div class="priority-list"><div class="priority-item">'+
+          '<div class="priority-item-title">The room is new.</div>'+
+          '<div class="priority-item-meta">See who is here, then post when you have something real to ask or share.</div>'+
+          '<div class="priority-item-tools"><a class="act" href="directory.html">See members</a></div>'+
+        '</div></div>';
   }
 
   try{
     await SS.requireMember('home');
 
-    SS.$('askAction').addEventListener('click',function(){showPanel('ask');});
-    SS.$('winAction').addEventListener('click',function(){showPanel('win');});
-    SS.$('cancelAsk').addEventListener('click',function(){showPanel(null);});
-    SS.$('cancelWin').addEventListener('click',function(){showPanel(null);});
+    SS.$('openPost').addEventListener('click',openSheet);
+    SS.$('closePost').addEventListener('click',closeSheet);
+    SS.$('postSheet').addEventListener('click',function(e){
+      if(e.target===SS.$('postSheet'))closeSheet();
+    });
+    SS.$('chooseAsk').addEventListener('click',showAsk);
+    SS.$('chooseShare').addEventListener('click',showShare);
+    SS.$('backAsk').addEventListener('click',showChoice);
+    SS.$('backShare').addEventListener('click',showChoice);
 
     SS.$('postAsk').addEventListener('click',async function(){
       var stuck=SS.$('stuck').value.trim();
       var tried=SS.$('tried').value.trim();
       var result=SS.$('result').value.trim();
 
-      if(stuck.length<4 || result.length<4){
-        SS.$('askMsg').textContent='Add what is stuck and what a good result looks like.';
+      if(stuck.length<4){
+        SS.$('askMsg').textContent='Tell the room what is going on first.';
         SS.$('askMsg').className='message bad';
         return;
       }
 
-      var body="WHAT'S STUCK\n"+stuck+
-        (tried?"\n\nWHAT I'VE TRIED\n"+tried:"")+
-        "\n\nA GOOD RESULT LOOKS LIKE\n"+result;
+      var body=stuck;
+      if(tried)body+='\n\nWhat I’ve tried:\n'+tried;
+      if(result)body+='\n\nA good result would be:\n'+result;
 
-      var btn=this;btn.disabled=true;btn.textContent='Posting…';
+      var btn=this;
+      btn.disabled=true;
+      btn.textContent='Posting…';
+
       try{
         var r=await SS.client.from('posts').insert({
           author_member_id:SS.ctx.member.id,
@@ -259,41 +310,52 @@
           body:body
         });
         if(r.error)throw r.error;
-        SS.$('stuck').value='';SS.$('tried').value='';SS.$('result').value='';
-        showPanel(null);
+
+        SS.$('stuck').value='';
+        SS.$('tried').value='';
+        SS.$('result').value='';
+        closeSheet();
         await loadCommunity();
       }catch(e){
         SS.$('askMsg').textContent=e.message||'Could not post question.';
         SS.$('askMsg').className='message bad';
       }finally{
-        btn.disabled=false;btn.textContent='Ask the room';
+        btn.disabled=false;
+        btn.textContent='Post question';
       }
     });
 
-    SS.$('postWin').addEventListener('click',async function(){
-      var text=SS.$('winBody').value.trim();
+    SS.$('postShare').addEventListener('click',async function(){
+      var text=SS.$('shareBody').value.trim();
+
       if(text.length<4){
-        SS.$('winMsg').textContent='Tell the room what worked.';
-        SS.$('winMsg').className='message bad';
+        SS.$('shareMsg').textContent='Write something first.';
+        SS.$('shareMsg').className='message bad';
         return;
       }
 
-      var btn=this;btn.disabled=true;btn.textContent='Posting…';
+      var btn=this;
+      btn.disabled=true;
+      btn.textContent='Posting…';
+
       try{
         var r=await SS.client.from('posts').insert({
           author_member_id:SS.ctx.member.id,
-          category:'win',
+          category:'discussion',
+          subtype:'share',
           body:text
         });
         if(r.error)throw r.error;
-        SS.$('winBody').value='';
-        showPanel(null);
+
+        SS.$('shareBody').value='';
+        closeSheet();
         await loadCommunity();
       }catch(e){
-        SS.$('winMsg').textContent=e.message||'Could not share win.';
-        SS.$('winMsg').className='message bad';
+        SS.$('shareMsg').textContent=e.message||'Could not post.';
+        SS.$('shareMsg').className='message bad';
       }finally{
-        btn.disabled=false;btn.textContent='Share win';
+        btn.disabled=false;
+        btn.textContent='Post';
       }
     });
 
@@ -302,11 +364,16 @@
       if(claim){
         claim.disabled=true;
         try{
-          var c=await SS.client.rpc('claim_opportunity',{p_opportunity_id:claim.dataset.claimOpportunity});
+          var c=await SS.client.rpc('claim_opportunity',{
+            p_opportunity_id:claim.dataset.claimOpportunity
+          });
           if(c.error)throw c.error;
           SS.toast('Claimed. Reach out to the person who posted it.');
           await loadMatchedOpportunities();
-        }catch(err){SS.toast(err.message);claim.disabled=false;}
+        }catch(err){
+          SS.toast(err.message);
+          claim.disabled=false;
+        }
         return;
       }
 
@@ -316,13 +383,20 @@
         var input=document.querySelector('[data-reply-input="'+CSS.escape(postId)+'"]');
         var text=input&&input.value.trim();
         if(!text)return;
+
         reply.disabled=true;
         var rr=await SS.client.from('post_replies').insert({
           post_id:postId,
           author_member_id:SS.ctx.member.id,
           body:text
         });
-        if(rr.error){SS.toast(rr.error.message);reply.disabled=false;return;}
+
+        if(rr.error){
+          SS.toast(rr.error.message);
+          reply.disabled=false;
+          return;
+        }
+
         await loadCommunity();
         return;
       }
@@ -337,6 +411,7 @@
     });
 
     document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'&&!SS.$('postSheet').hidden)closeSheet();
       if(e.key==='Enter'&&e.target.matches('[data-reply-input]')){
         e.preventDefault();
         var id=e.target.dataset.replyInput;
@@ -345,7 +420,7 @@
       }
     });
 
-    await reload();
+    await Promise.all([loadMatchedOpportunities(),loadCommunity()]);
   }catch(e){
     if(e.message!=='signin'&&e.message!=='inactive'){
       SS.pageError('matchedOpps',e.message);

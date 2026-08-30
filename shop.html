@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111111"><title>Member · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
-</head><body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Member · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=ux2">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" href="assets/icons/favicon-32.png">
+</head>
+<body>
 <header class="top" id="top"></header>
 <div class="shell">
   <aside class="side" id="side"></aside>
   <main>
-    <a class="act" href="directory.html" style="margin-bottom:16px">← Members</a>
+    <a class="act" href="directory.html" style="margin-bottom:20px">← Members</a>
     <div id="profile"><div class="loading">Loading member…</div></div>
   </main>
 </div>
 <nav class="tabs" id="tabs"></nav>
 <a class="help-fab" href="helpdesk.html">Get help</a>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=community-v1"></script>
+<script src="assets/app.js?v=ux2"></script>
 <script>
 (async function(){
   try{
     await SS.requireMember('members');
+
     var id=new URLSearchParams(location.search).get('id');
     if(!id)throw new Error('Member not found.');
+
     var item=await SS.getMember(id);
     if(!item)throw new Error('Member not found.');
 
@@ -34,49 +43,86 @@
       var email=(b.contact_email||(m.show_email?m.email:'')||'').trim();
       var socials=m.show_socials;
       var own=m.id===SS.ctx.member.id;
+      var line=[b.name,b.trade,b.city].filter(Boolean).join(' · ');
+      var trust=item.vouchCount>=3
+        ? '<span class="chip">Vouched for by '+item.vouchCount+' members</span>'
+        : '';
 
       SS.$('profile').innerHTML=
         '<section class="profile-hero">'+
-          '<div class="profile-banner">'+(b.banner_url?'<img src="'+SS.esc(b.banner_url)+'" alt="">':'')+'</div>'+
           '<div class="profile-core">'+
             '<div class="profile-title">'+
-              (m.profile_photo_url?'<div class="profile-photo"><img src="'+SS.esc(m.profile_photo_url)+'" alt=""></div>':'<div class="profile-photo">'+SS.esc(SS.initials(m.full_name))+'</div>')+
-              '<div class="profile-title-text"><h1>'+SS.esc(m.full_name)+'</h1><div class="muted">'+SS.esc(SS.businessLine(m,b))+'</div></div>'+
+              (m.profile_photo_url
+                ? '<div class="profile-photo"><img src="'+SS.esc(m.profile_photo_url)+'" alt=""></div>'
+                : '<div class="profile-photo">'+SS.esc(SS.initials(m.full_name))+'</div>')+
+              '<div class="profile-title-text">'+
+                '<h1>'+SS.esc(m.full_name)+'</h1>'+
+                '<div class="muted">'+SS.esc(line||m.headline||'Member')+'</div>'+
+              '</div>'+
               (b.logo_url?'<div class="logo-box"><img src="'+SS.esc(b.logo_url)+'" alt=""></div>':'')+
             '</div>'+
-            '<div class="member-tags" style="margin-top:14px">'+
-              (b.trade?'<span class="chip">'+SS.esc(b.trade)+'</span>':'')+
-              '<span class="chip yellow">'+item.vouchCount+' '+(item.vouchCount===1?'vouch':'vouches')+'</span>'+
-            '</div>'+
+            (trust?'<div class="member-tags" style="margin-top:13px">'+trust+'</div>':'')+
             '<div class="contact-grid">'+
-              ((m.show_phone&&phone)?'<a class="act solid" href="tel:'+SS.esc(phone.replace(/[^+0-9]/g,''))+'">Call</a><a class="act" href="sms:'+SS.esc(phone.replace(/[^+0-9]/g,''))+'">Text</a>':'')+
+              ((m.show_phone&&phone)
+                ? '<a class="act solid" href="tel:'+SS.esc(phone.replace(/[^+0-9]/g,''))+'">Call</a>'+
+                  '<a class="act" href="sms:'+SS.esc(phone.replace(/[^+0-9]/g,''))+'">Text</a>'
+                : '')+
               (website?'<a class="act" href="'+SS.esc(SS.socialHref(website))+'" target="_blank" rel="noopener">Website</a>':'')+
-              '<button class="act yellow" type="button" id="shareBtn">Share</button>'+
+              '<button class="act" type="button" id="shareBtn">Share</button>'+
             '</div>'+
           '</div>'+
         '</section>'+
-        ((b.what_they_do||m.bio||b.helps_with||m.looking_for)?'<section class="card">'+
-          (b.what_they_do?'<h2 style="margin-top:0">What they do</h2><p>'+SS.esc(b.what_they_do)+'</p>':'')+
-          (m.bio?'<h2>About</h2><p>'+SS.esc(m.bio)+'</p>':'')+
-          (b.helps_with?'<h2>How they can help</h2><p>'+SS.esc(b.helps_with)+'</p>':'')+
-          (m.looking_for?'<h2>What they are looking for</h2><p>'+SS.esc(m.looking_for)+'</p>':'')+
-        '</section>':'')+
-        ((email||(socials&&(m.instagram_url||m.linkedin_url)))?'<section class="card"><h2 style="margin-top:0">Reach them</h2>'+
-          (email?'<p><a style="text-decoration:underline" href="mailto:'+SS.esc(email)+'">'+SS.esc(email)+'</a></p>':'')+
-          (socials&&m.instagram_url?'<p><a style="text-decoration:underline" target="_blank" rel="noopener" href="'+SS.esc(SS.socialHref(m.instagram_url))+'">Instagram</a></p>':'')+
-          (socials&&m.linkedin_url?'<p><a style="text-decoration:underline" target="_blank" rel="noopener" href="'+SS.esc(SS.socialHref(m.linkedin_url))+'">LinkedIn</a></p>':'')+
-        '</section>':'')+
+
+        ((b.helps_with||b.what_they_do||m.bio||m.looking_for)
+          ? '<section class="card">'+
+              (b.helps_with?'<h2 style="margin-top:0">How they can help</h2><p>'+SS.esc(b.helps_with)+'</p>':'')+
+              (b.what_they_do?'<h2>What they do</h2><p>'+SS.esc(b.what_they_do)+'</p>':'')+
+              (m.bio?'<h2>About</h2><p>'+SS.esc(m.bio)+'</p>':'')+
+              (m.looking_for?'<h2>What they are looking for</h2><p>'+SS.esc(m.looking_for)+'</p>':'')+
+            '</section>'
+          : '')+
+
+        ((email||(socials&&(m.instagram_url||m.linkedin_url)))
+          ? '<section class="card"><h2 style="margin-top:0">Contact</h2>'+
+              (email?'<p><a style="text-decoration:underline" href="mailto:'+SS.esc(email)+'">'+SS.esc(email)+'</a></p>':'')+
+              (socials&&m.instagram_url?'<p><a style="text-decoration:underline" target="_blank" rel="noopener" href="'+SS.esc(SS.socialHref(m.instagram_url))+'">Instagram</a></p>':'')+
+              (socials&&m.linkedin_url?'<p><a style="text-decoration:underline" target="_blank" rel="noopener" href="'+SS.esc(SS.socialHref(m.linkedin_url))+'">LinkedIn</a></p>':'')+
+            '</section>'
+          : '')+
+
         '<div class="card"><div class="member-actions">'+
-          (!own?'<button class="vouch'+(item.myVouchId?' on':'')+'" id="vouchBtn" type="button">'+(item.myVouchId?'Vouched':'Vouch')+' · '+item.vouchCount+'</button>':'<span class="tiny">This is your profile.</span>')+
+          (!own
+            ? '<button class="vouch'+(item.myVouchId?' on':'')+'" id="vouchBtn" type="button">'+
+                (item.myVouchId?'Vouched':'Vouch')+'</button>'
+            : '<span class="tiny">This is your profile.</span>')+
         '</div></div>';
 
       var share=SS.$('shareBtn');
-      if(share)share.addEventListener('click',function(){SS.shareMember(item).catch(function(e){if(e.name!=='AbortError')SS.toast(e.message);});});
+      if(share)share.addEventListener('click',function(){
+        SS.shareMember(item).catch(function(e){
+          if(e.name!=='AbortError')SS.toast(e.message);
+        });
+      });
+
       var vb=SS.$('vouchBtn');
-      if(vb)vb.addEventListener('click',async function(){vb.disabled=true;try{await SS.toggleVouch(m.id);item=await SS.getMember(m.id);render();}catch(e){SS.toast(e.message);vb.disabled=false;}});
+      if(vb)vb.addEventListener('click',async function(){
+        vb.disabled=true;
+        try{
+          await SS.toggleVouch(m.id);
+          item=await SS.getMember(m.id);
+          render();
+        }catch(e){
+          SS.toast(e.message);
+          vb.disabled=false;
+        }
+      });
     }
 
     render();
-  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('profile',e.message);}
+  }catch(e){
+    if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('profile',e.message);
+  }
 })();
-</script></body></html>
+</script>
+</body>
+</html>

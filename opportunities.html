@@ -5,103 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
 <title>Opportunities · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=outcome1">
+<link rel="stylesheet" href="assets/app.css?v=ux2">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/favicon-32.png">
-<style>
-  .opp-new{border:1.5px solid #111;border-radius:20px;padding:17px;margin-bottom:18px;background:#fff}
-  .opp-grid{display:grid;gap:10px}
-  .opp-card{border:1px solid #E4E4E4;border-radius:18px;background:#fff;padding:16px}
-  .opp-card.hot{border-color:#111}
-  .opp-head{display:flex;gap:10px;align-items:flex-start}
-  .opp-main{flex:1;min-width:0}
-  .opp-need{font-size:16px;font-weight:820;letter-spacing:-.012em;line-height:1.3}
-  .opp-meta{font-size:12px;color:#5F5F5F;margin-top:5px;line-height:1.45}
-  .opp-details{white-space:pre-wrap;font-size:14px;line-height:1.52;margin-top:13px}
-  .opp-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #EDEDED}
-  .opp-filters{display:flex;gap:7px;overflow:auto;margin:0 0 13px;scrollbar-width:none}
-  .opp-filters::-webkit-scrollbar{display:none}
-  .of{border:1px solid #D7D7D7;background:#fff;border-radius:999px;padding:7px 11px;white-space:nowrap;font:inherit;font-size:12px;font-weight:760;cursor:pointer}
-  .of.on{background:#111;color:#fff;border-color:#111}
-  .match{display:inline-flex;background:#FFD700;border-radius:999px;padding:5px 8px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
-  .outcome-nudge{background:#FFF6BD;border:1px solid #E8D35B;border-radius:13px;padding:10px 11px;margin-top:12px;font-size:12px;font-weight:700}
-  .modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:90;display:flex;align-items:flex-end;justify-content:center;padding:14px}
-  .modal-wrap[hidden]{display:none}
-  .modal-card{width:min(520px,100%);background:#fff;border-radius:22px;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.22)}
-  @media(min-width:720px){.modal-wrap{align-items:center}}
-</style>
 </head>
 <body>
 <header class="top" id="top"></header>
+
 <div class="shell">
   <aside class="side" id="side"></aside>
+
   <main>
-    <h1>Opportunities</h1>
-    <p class="sub">Real work, referrals, hiring and connections moving through the network.</p>
-
-    <section class="opp-new" id="new">
-      <div class="eyebrow">Post an opportunity</div>
-      <h2 style="margin:6px 0 5px">Who or what do you need?</h2>
-      <p class="tiny" style="margin:0 0 14px">Give the room enough information to act.</p>
-
-      <div class="field">
-        <label for="need">What is needed?</label>
-        <input id="need" maxlength="500" placeholder="Need a plumber for a customer with a leaking water heater">
+    <div class="compact-page-head">
+      <div class="head-copy">
+        <h1>Opportunities</h1>
+        <p class="sub">Work and useful connections moving through the network.</p>
       </div>
+      <button class="btn sm post-button" id="openNew" type="button">+ Post</button>
+    </div>
 
-      <div class="grid2">
-        <div class="field">
-          <label for="trade">Trade / person needed</label>
-          <input id="trade" maxlength="120" list="tradeList" placeholder="Plumbing">
-          <datalist id="tradeList"></datalist>
-        </div>
-        <div class="field">
-          <label for="city">City / area</label>
-          <input id="city" maxlength="120" list="cityList" placeholder="Georgetown">
-          <datalist id="cityList"></datalist>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="timing">When?</label>
-        <select id="timing">
-          <option value="">Choose timing</option>
-          <option>Today</option>
-          <option>Next 2 days</option>
-          <option>This week</option>
-          <option>Next 2 weeks</option>
-          <option>Flexible</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="details">Details</label>
-        <textarea id="details" maxlength="4000" placeholder="Anything the right person should know."></textarea>
-      </div>
-
-      <button class="btn wide" id="createBtn" type="button">Post opportunity</button>
-      <div class="message" id="createMsg" aria-live="polite"></div>
-    </section>
-
-    <div class="opp-filters" id="filters">
-      <button class="of on" data-filter="open">Open</button>
-      <button class="of" data-filter="claimed">Claimed</button>
-      <button class="of" data-filter="mine">Mine</button>
-      <button class="of" data-filter="closed">Closed</button>
+    <div class="opp-filter-row" id="filters">
+      <button class="opp-filter on" data-filter="open">Open</button>
+      <button class="opp-filter" data-filter="claimed">Claimed</button>
+      <button class="opp-filter" data-filter="mine">Mine</button>
+      <button class="opp-filter" data-filter="closed">Closed</button>
     </div>
 
     <div id="list"><div class="loading">Loading opportunities…</div></div>
   </main>
 </div>
+
 <nav class="tabs" id="tabs"></nav>
 <a class="help-fab" href="helpdesk.html">Get help</a>
 
-<div class="modal-wrap" id="closeModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="closeTitle">
-    <div class="eyebrow">Close opportunity</div>
-    <h2 id="closeTitle" style="margin:7px 0 5px">What happened?</h2>
-    <p class="tiny" style="margin:0 0 14px">This is how Seek &amp; Scale learns whether the network is actually producing value.</p>
+<!-- NEW OPPORTUNITY SHEET -->
+<div class="sheet-backdrop" id="newSheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="newTitle">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="newTitle">Post an opportunity</h2>
+      <button class="sheet-close" id="closeNew" type="button" aria-label="Close">×</button>
+    </div>
+
+    <div class="field">
+      <label for="need">What do you need?</label>
+      <textarea id="need" maxlength="500" placeholder="Need a plumber for a customer with a leaking water heater"></textarea>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label for="trade">Trade / person needed</label>
+        <input id="trade" maxlength="120" list="tradeList" placeholder="Plumbing">
+        <datalist id="tradeList"></datalist>
+      </div>
+
+      <div class="field">
+        <label for="city">Where?</label>
+        <input id="city" maxlength="120" list="cityList" placeholder="Georgetown">
+        <datalist id="cityList"></datalist>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="timing">When?</label>
+      <select id="timing">
+        <option value="">Choose timing</option>
+        <option>Today</option>
+        <option>Next 2 days</option>
+        <option>This week</option>
+        <option>Next 2 weeks</option>
+        <option>Flexible</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="details">Anything else? <span class="dim">(optional)</span></label>
+      <textarea id="details" maxlength="4000" placeholder="Anything the right person should know."></textarea>
+    </div>
+
+    <button class="btn wide" id="createBtn" type="button">Post opportunity</button>
+    <div class="message" id="createMsg"></div>
+  </section>
+</div>
+
+<!-- OUTCOME SHEET -->
+<div class="sheet-backdrop" id="closeSheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="closeTitle">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="closeTitle">What happened?</h2>
+      <button class="sheet-close" id="cancelClose" type="button" aria-label="Close">×</button>
+    </div>
+
+    <p class="tiny" style="margin-top:-5px">Record the result so the network can measure real value.</p>
+
     <div class="field">
       <label for="outcome">Outcome</label>
       <select id="outcome">
@@ -115,17 +113,15 @@
         <option value="other">Other</option>
       </select>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="act" id="cancelClose" type="button">Cancel</button>
-      <button class="btn sm" id="confirmClose" type="button" style="margin-left:auto">Close opportunity</button>
-    </div>
+
+    <button class="btn wide" id="confirmClose" type="button">Close opportunity</button>
     <div class="message" id="closeMsg"></div>
-  </div>
+  </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=outcome1"></script>
+<script src="assets/app.js?v=ux2"></script>
 <script>
 (async function(){
   'use strict';
@@ -134,47 +130,59 @@
   var filter='open';
   var closeId=null;
 
-  function statusChip(o){
-    var cls=o.status==='open'?'yellow':'';
-    return '<span class="chip '+cls+'">'+SS.esc(o.status)+'</span>';
-  }
-
   function matchScore(o){
     return SS.opportunityMatchScore(o,SS.ctx.business);
   }
 
   function needsOutcomeNudge(o){
-    if(o.poster_member_id!==SS.ctx.member.id || o.status!=='claimed' || !o.claimed_at)return false;
-    return Date.now()-new Date(o.claimed_at).getTime() >= 7*24*60*60*1000;
+    return o.poster_member_id===SS.ctx.member.id &&
+      o.status==='claimed' &&
+      o.claimed_at &&
+      Date.now()-new Date(o.claimed_at).getTime() >= 7*24*60*60*1000;
   }
 
-  function card(o){
+  function row(o){
     var mine=o.poster_member_id===SS.ctx.member.id;
     var claimedByMe=o.claimed_by_member_id===SS.ctx.member.id;
     var poster=o.poster||{full_name:'Member'};
-    var score=matchScore(o);
     var claimer=o.claimer||null;
+    var score=matchScore(o);
 
-    return '<article class="opp-card '+(o.status==='open'&&score>=2?'hot':'')+'">'+
-      '<div class="opp-head">'+
-        '<div class="opp-main">'+
-          '<div class="opp-need">'+SS.esc(o.need)+'</div>'+
-          '<div class="opp-meta">'+SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+'</div>'+
+    return '<article class="opp-row">'+
+      '<div class="opp-row-head">'+
+        '<div class="opp-row-main">'+
+          '<div class="opp-row-title">'+SS.esc(o.need)+'</div>'+
+          '<div class="opp-row-meta">'+SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+'</div>'+
         '</div>'+
-        statusChip(o)+
+        '<span class="opp-status '+SS.esc(o.status)+'">'+SS.esc(o.status)+'</span>'+
       '</div>'+
-      (score>=2&&o.status==='open'?'<div style="margin-top:9px"><span class="match">'+(score>=3?'Strong match':'Trade match')+'</span></div>':'')+
-      (o.details?'<div class="opp-details">'+SS.esc(o.details)+'</div>':'')+
-      '<div class="tiny" style="margin-top:12px">Posted by <strong>'+SS.esc(poster.full_name||'Member')+'</strong> · '+SS.esc(SS.fmtTime(o.created_at))+'</div>'+
-      (o.status==='claimed'?'<div class="tiny" style="margin-top:6px">Claimed by <strong>'+SS.esc(claimer?claimer.full_name:'a member')+'</strong></div>':'')+
-      (o.status==='closed'&&o.outcome?'<div class="tiny" style="margin-top:6px"><strong>Outcome:</strong> '+SS.esc(SS.opportunityOutcomeLabel(o.outcome))+'</div>':'')+
-      (needsOutcomeNudge(o)?'<div class="outcome-nudge">It has been 7 days. Did this turn into something? Close it and record the outcome.</div>':'')+
-      '<div class="opp-actions">'+
-        (o.status==='open'&&!mine?'<button class="act solid" type="button" data-claim="'+SS.esc(o.id)+'">Claim</button>':'')+
-        (o.status==='claimed'&&claimedByMe?'<button class="act" type="button" data-release="'+SS.esc(o.id)+'">Release claim</button>':'')+
-        (o.status==='claimed'&&mine?'<button class="act" type="button" data-release="'+SS.esc(o.id)+'">Release claim</button>':'')+
-        ((o.status==='open'||o.status==='claimed')&&mine?'<button class="act yellow" type="button" data-close="'+SS.esc(o.id)+'">Close &amp; record outcome</button>':'')+
-        (o.status==='closed'&&mine?'<button class="act" type="button" data-reopen="'+SS.esc(o.id)+'">Reopen</button>':'')+
+      (o.details?'<div class="opp-row-details">'+SS.esc(o.details)+'</div>':'')+
+      '<div class="opp-row-meta" style="margin-top:9px">Posted by '+SS.esc(poster.full_name||'Member')+' · '+SS.esc(SS.fmtTime(o.created_at))+'</div>'+
+      (o.status==='claimed'
+        ? '<div class="opp-row-meta">Claimed by '+SS.esc(claimer?claimer.full_name:'a member')+'</div>'
+        : '')+
+      (o.status==='closed'&&o.outcome
+        ? '<div class="opp-row-meta"><strong>Result:</strong> '+SS.esc(SS.opportunityOutcomeLabel(o.outcome))+'</div>'
+        : '')+
+      (needsOutcomeNudge(o)
+        ? '<div class="card yellow" style="padding:10px 12px;margin:10px 0 0"><div class="tiny"><strong>7-day check:</strong> Did this turn into something?</div></div>'
+        : '')+
+      '<div class="opp-row-actions">'+
+        (o.status==='open'&&!mine
+          ? '<button class="act solid" type="button" data-claim="'+SS.esc(o.id)+'">Claim</button>'
+          : '')+
+        (o.status==='open'&&score>=2
+          ? '<span class="chip yellow">'+(score>=3?'Strong match':'Trade match')+'</span>'
+          : '')+
+        (o.status==='claimed'&&(claimedByMe||mine)
+          ? '<button class="act" type="button" data-release="'+SS.esc(o.id)+'">Release claim</button>'
+          : '')+
+        ((o.status==='open'||o.status==='claimed')&&mine
+          ? '<button class="act" type="button" data-close="'+SS.esc(o.id)+'">Close & record result</button>'
+          : '')+
+        (o.status==='closed'&&mine
+          ? '<button class="act" type="button" data-reopen="'+SS.esc(o.id)+'">Reopen</button>'
+          : '')+
         '<a class="act" style="margin-left:auto" href="shop.html?id='+encodeURIComponent(o.poster_member_id)+'">View poster</a>'+
       '</div>'+
     '</article>';
@@ -187,20 +195,24 @@
     if(filter==='claimed')rows=rows.filter(function(o){return o.status==='claimed';});
     if(filter==='closed')rows=rows.filter(function(o){return o.status==='closed';});
     if(filter==='mine')rows=rows.filter(function(o){
-      return o.poster_member_id===SS.ctx.member.id || o.claimed_by_member_id===SS.ctx.member.id;
+      return o.poster_member_id===SS.ctx.member.id ||
+        o.claimed_by_member_id===SS.ctx.member.id;
     });
 
     if(filter==='open'){
       rows.sort(function(a,b){
-        var ds=matchScore(b)-matchScore(a);
-        if(ds)return ds;
+        var diff=matchScore(b)-matchScore(a);
+        if(diff)return diff;
         return new Date(b.created_at)-new Date(a.created_at);
       });
     }
 
     SS.$('list').innerHTML=rows.length
-      ? '<div class="opp-grid">'+rows.map(card).join('')+'</div>'
-      : '<div class="card"><div class="empty"><strong>Nothing here right now.</strong><br>That is okay. Real opportunities only.</div></div>';
+      ? '<div class="opp-list">'+rows.map(row).join('')+'</div>'
+      : '<div class="priority-list"><div class="priority-item">'+
+          '<div class="priority-item-title">Nothing here right now.</div>'+
+          '<div class="priority-item-meta">That is okay. Real opportunities only.</div>'+
+        '</div></div>';
   }
 
   async function load(){
@@ -209,23 +221,52 @@
   }
 
   async function seedLists(){
-    var r=await SS.client.from('businesses').select('trade,city').eq('status','active');
+    var r=await SS.client.from('businesses')
+      .select('trade,city')
+      .eq('status','active');
+
     if(r.error)return;
 
-    var trades=Array.from(new Set((r.data||[]).map(function(x){return (x.trade||'').trim();}).filter(Boolean))).sort();
-    var cities=Array.from(new Set((r.data||[]).map(function(x){return (x.city||'').trim();}).filter(Boolean))).sort();
+    var trades=Array.from(new Set(
+      (r.data||[]).map(function(x){return (x.trade||'').trim();}).filter(Boolean)
+    )).sort();
 
-    SS.$('tradeList').innerHTML=trades.map(function(x){return '<option value="'+SS.esc(x)+'"></option>';}).join('');
-    SS.$('cityList').innerHTML=cities.map(function(x){return '<option value="'+SS.esc(x)+'"></option>';}).join('');
+    var cities=Array.from(new Set(
+      (r.data||[]).map(function(x){return (x.city||'').trim();}).filter(Boolean)
+    )).sort();
+
+    SS.$('tradeList').innerHTML=trades.map(function(x){
+      return '<option value="'+SS.esc(x)+'"></option>';
+    }).join('');
+
+    SS.$('cityList').innerHTML=cities.map(function(x){
+      return '<option value="'+SS.esc(x)+'"></option>';
+    }).join('');
+  }
+
+  function openNew(){
+    SS.$('newSheet').hidden=false;
+    setTimeout(function(){SS.$('need').focus();},0);
+  }
+
+  function closeNew(){
+    SS.$('newSheet').hidden=true;
+    if(location.hash==='#new'){
+      history.replaceState(null,'',location.pathname+location.search);
+    }
   }
 
   try{
     await SS.requireMember('opportunities');
     await seedLists();
 
-    if(location.hash==='#new'){
-      setTimeout(function(){SS.$('need').focus();},100);
-    }
+    SS.$('openNew').addEventListener('click',openNew);
+    SS.$('closeNew').addEventListener('click',closeNew);
+    SS.$('newSheet').addEventListener('click',function(e){
+      if(e.target===SS.$('newSheet'))closeNew();
+    });
+
+    if(location.hash==='#new')openNew();
 
     SS.$('createBtn').addEventListener('click',async function(){
       var need=SS.$('need').value.trim();
@@ -235,14 +276,14 @@
       var details=SS.$('details').value.trim();
 
       if(!need||!trade||!city||!timing){
-        SS.$('createMsg').textContent='Add what is needed, the trade, city and timing.';
+        SS.$('createMsg').textContent='Add what you need, the trade, where, and when.';
         SS.$('createMsg').className='message bad';
         return;
       }
 
       var btn=this;
-      btn.disabled=true;btn.textContent='Posting…';
-      SS.$('createMsg').textContent='';
+      btn.disabled=true;
+      btn.textContent='Posting…';
 
       try{
         var r=await SS.client.rpc('create_opportunity',{
@@ -259,24 +300,31 @@
         SS.$('city').value='';
         SS.$('timing').value='';
         SS.$('details').value='';
-        SS.$('createMsg').textContent='Opportunity is open.';
-        SS.$('createMsg').className='message good';
+        closeNew();
+
         filter='open';
-        document.querySelectorAll('.of').forEach(function(x){x.classList.toggle('on',x.dataset.filter==='open');});
+        document.querySelectorAll('.opp-filter').forEach(function(x){
+          x.classList.toggle('on',x.dataset.filter==='open');
+        });
+
         await load();
       }catch(e){
         SS.$('createMsg').textContent=e.message||'Could not post opportunity.';
         SS.$('createMsg').className='message bad';
       }finally{
-        btn.disabled=false;btn.textContent='Post opportunity';
+        btn.disabled=false;
+        btn.textContent='Post opportunity';
       }
     });
 
     SS.$('filters').addEventListener('click',function(e){
       var b=e.target.closest('[data-filter]');
       if(!b)return;
+
       filter=b.dataset.filter;
-      document.querySelectorAll('.of').forEach(function(x){x.classList.toggle('on',x===b);});
+      document.querySelectorAll('.opp-filter').forEach(function(x){
+        x.classList.toggle('on',x===b);
+      });
       render();
     });
 
@@ -285,23 +333,34 @@
       if(claim){
         claim.disabled=true;
         try{
-          var r=await SS.client.rpc('claim_opportunity',{p_opportunity_id:claim.dataset.claim});
+          var r=await SS.client.rpc('claim_opportunity',{
+            p_opportunity_id:claim.dataset.claim
+          });
           if(r.error)throw r.error;
           SS.toast('Claimed. Reach out to the person who posted it.');
           await load();
-        }catch(err){SS.toast(err.message);claim.disabled=false;}
+        }catch(err){
+          SS.toast(err.message);
+          claim.disabled=false;
+        }
         return;
       }
 
       var release=e.target.closest('[data-release]');
       if(release){
-        if(!confirm('Release this claim and make the opportunity open again?'))return;
+        if(!confirm('Release this claim and make it open again?'))return;
+
         release.disabled=true;
         try{
-          var rr=await SS.client.rpc('release_opportunity',{p_opportunity_id:release.dataset.release});
+          var rr=await SS.client.rpc('release_opportunity',{
+            p_opportunity_id:release.dataset.release
+          });
           if(rr.error)throw rr.error;
           await load();
-        }catch(err){SS.toast(err.message);release.disabled=false;}
+        }catch(err){
+          SS.toast(err.message);
+          release.disabled=false;
+        }
         return;
       }
 
@@ -310,33 +369,44 @@
         closeId=close.dataset.close;
         SS.$('outcome').value='';
         SS.$('closeMsg').textContent='';
-        SS.$('closeModal').hidden=false;
+        SS.$('closeSheet').hidden=false;
         return;
       }
 
       var reopen=e.target.closest('[data-reopen]');
       if(reopen){
         if(!confirm('Reopen this opportunity?'))return;
+
         reopen.disabled=true;
         try{
-          var ro=await SS.client.rpc('reopen_opportunity',{p_opportunity_id:reopen.dataset.reopen});
+          var ro=await SS.client.rpc('reopen_opportunity',{
+            p_opportunity_id:reopen.dataset.reopen
+          });
           if(ro.error)throw ro.error;
           filter='open';
           await load();
-        }catch(err){SS.toast(err.message);reopen.disabled=false;}
+        }catch(err){
+          SS.toast(err.message);
+          reopen.disabled=false;
+        }
       }
     });
 
     SS.$('cancelClose').addEventListener('click',function(){
-      SS.$('closeModal').hidden=true;closeId=null;
+      SS.$('closeSheet').hidden=true;
+      closeId=null;
     });
 
-    SS.$('closeModal').addEventListener('click',function(e){
-      if(e.target===SS.$('closeModal')){SS.$('closeModal').hidden=true;closeId=null;}
+    SS.$('closeSheet').addEventListener('click',function(e){
+      if(e.target===SS.$('closeSheet')){
+        SS.$('closeSheet').hidden=true;
+        closeId=null;
+      }
     });
 
     SS.$('confirmClose').addEventListener('click',async function(){
       if(!closeId)return;
+
       var outcome=SS.$('outcome').value;
       if(!outcome){
         SS.$('closeMsg').textContent='Choose what happened first.';
@@ -344,27 +414,44 @@
         return;
       }
 
-      var btn=this;btn.disabled=true;btn.textContent='Closing…';
+      var btn=this;
+      btn.disabled=true;
+      btn.textContent='Closing…';
+
       try{
         var r=await SS.client.rpc('close_opportunity',{
           p_opportunity_id:closeId,
           p_outcome:outcome
         });
         if(r.error)throw r.error;
-        SS.$('closeModal').hidden=true;
+
+        SS.$('closeSheet').hidden=true;
         closeId=null;
         await load();
       }catch(err){
         SS.$('closeMsg').textContent=err.message||'Could not close opportunity.';
         SS.$('closeMsg').className='message bad';
       }finally{
-        btn.disabled=false;btn.textContent='Close opportunity';
+        btn.disabled=false;
+        btn.textContent='Close opportunity';
+      }
+    });
+
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){
+        if(!SS.$('newSheet').hidden)closeNew();
+        if(!SS.$('closeSheet').hidden){
+          SS.$('closeSheet').hidden=true;
+          closeId=null;
+        }
       }
     });
 
     await load();
   }catch(e){
-    if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('list',e.message);
+    if(e.message!=='signin'&&e.message!=='inactive'){
+      SS.pageError('list',e.message);
+    }
   }
 })();
 </script>

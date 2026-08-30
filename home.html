@@ -1,432 +1,315 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111111">
-<title>Home · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=ux2">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
-<link rel="icon" href="assets/icons/favicon-32.png">
-</head>
-<body>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111"><title>Home · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=network3"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
+</head><body>
 <header class="top" id="top"></header>
-
 <div class="shell">
   <aside class="side" id="side"></aside>
+  <main class="network-home">
+    <div class="home-grid">
+      <div>
+        <div class="composer-card">
+          <div class="composer-top">
+            <div id="composerAvatar"></div>
+            <button class="composer-prompt" id="openComposer" type="button">Share something with the network…</button>
+          </div>
+          <div class="composer-actions">
+            <button class="composer-action" data-open-compose="resource" type="button">Resource</button>
+            <button class="composer-action" data-open-compose="ask" type="button">Ask</button>
+            <a class="composer-action" href="opportunities.html#new">Opportunity</a>
+            <button class="composer-action need" id="openNeed" type="button">I need…</button>
+          </div>
+        </div>
 
-  <main>
-    <div class="compact-page-head">
-      <div class="head-copy">
-        <h1>For you</h1>
-        <p class="sub">What needs your attention right now.</p>
+        <div id="forYou"></div>
+
+        <div class="feed-filter" id="feedFilter">
+          <button class="on" data-feed="all">All</button>
+          <button data-feed="questions">Questions</button>
+          <button data-feed="resources">Resources</button>
+          <button data-feed="intel">Local intel</button>
+          <button data-feed="opportunities">Opportunities</button>
+        </div>
+
+        <div class="network-feed" id="feed"><div class="loading">Loading your network…</div></div>
       </div>
-      <button class="btn sm post-button" id="openPost" type="button">+ Post</button>
+
+      <aside class="home-rail">
+        <div id="pulseRail"></div>
+        <div id="peopleRail"></div>
+        <div id="intelRail"></div>
+      </aside>
     </div>
-
-    <section class="priority-block">
-      <div class="priority-head">
-        <h2>Needs you</h2>
-        <a href="opportunities.html">See all</a>
-      </div>
-      <div id="matchedOpps"><div class="loading">Finding relevant opportunities…</div></div>
-    </section>
-
-    <section class="priority-block">
-      <div class="priority-head">
-        <h2>Can you help?</h2>
-      </div>
-      <div id="unanswered"><div class="loading">Finding questions…</div></div>
-    </section>
-
-    <section class="priority-block">
-      <div class="priority-head">
-        <h2>Around the room</h2>
-      </div>
-      <div id="room"><div class="loading">Loading the room…</div></div>
-    </section>
   </main>
 </div>
-
 <nav class="tabs" id="tabs"></nav>
 <a class="help-fab" href="helpdesk.html">Get help</a>
 
-<!-- POST CHOICE -->
-<div class="sheet-backdrop" id="postSheet" hidden>
-  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="postSheetTitle">
+<!-- COMPOSER -->
+<div class="sheet-backdrop" id="composerSheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="composerTitle">
     <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2 id="postSheetTitle">What do you want to do?</h2>
-      <button class="sheet-close" id="closePost" type="button" aria-label="Close">×</button>
+    <div class="sheet-head"><h2 id="composerTitle">Share with the network</h2><button class="sheet-close" id="closeComposer" type="button">×</button></div>
+
+    <div class="choice-grid" id="composerChoice">
+      <button class="choice-row" data-compose-choice="share" type="button"><span class="choice-icon">+</span><span class="choice-copy"><strong>Share something</strong><span>An update, win, lesson, or local business intel.</span></span><span>›</span></button>
+      <button class="choice-row" data-compose-choice="ask" type="button"><span class="choice-icon">?</span><span class="choice-copy"><strong>Ask the network</strong><span>Get useful input from other owners.</span></span><span>›</span></button>
+      <a class="choice-row" href="opportunities.html#new"><span class="choice-icon">↗</span><span class="choice-copy"><strong>Post an opportunity</strong><span>Work, referral, hiring, talent, or a person needed.</span></span><span>›</span></a>
+      <button class="choice-row" data-compose-choice="resource" type="button"><span class="choice-icon">□</span><span class="choice-copy"><strong>Share a resource</strong><span>A PDF, website, template, article, or useful reference.</span></span><span>›</span></button>
     </div>
 
-    <div id="choiceView">
-      <button class="post-choice" id="chooseAsk" type="button">
-        <span class="post-choice-icon">?</span>
-        <span><strong>Ask for help</strong><span>I’m stuck on something.</span></span>
-        <span class="post-choice-arrow">›</span>
-      </button>
-
-      <a class="post-choice" href="opportunities.html#new">
-        <span class="post-choice-icon">↗</span>
-        <span><strong>Post an opportunity</strong><span>Work, referral, hire or person needed.</span></span>
-        <span class="post-choice-arrow">›</span>
-      </a>
-
-      <button class="post-choice" id="chooseShare" type="button">
-        <span class="post-choice-icon">+</span>
-        <span><strong>Share something</strong><span>A win, lesson, update or useful thought.</span></span>
-        <span class="post-choice-arrow">›</span>
-      </button>
+    <div id="shareForm" hidden>
+      <button class="act" data-compose-back type="button">← Back</button>
+      <div class="segmented" id="shareType" style="margin-top:13px">
+        <button class="on" data-share-type="update" type="button">Update / lesson</button>
+        <button data-share-type="win" type="button">Win</button>
+        <button data-share-type="local-intel" type="button">Local intel</button>
+      </div>
+      <div class="field"><label for="shareBody">What do you want to share?</label><textarea id="shareBody" maxlength="6000" placeholder="Useful beats polished."></textarea></div>
+      <div class="field" id="intelCityField" hidden><label for="intelCity">City / area</label><input id="intelCity" placeholder="Georgetown"></div>
+      <div class="field"><label for="shareLink">Website link <span class="dim">(optional)</span></label><input id="shareLink" placeholder="https://"></div>
+      <div class="field"><label>Photo <span class="dim">(optional)</span></label><div class="attachment-row"><input id="shareImage" type="file" accept="image/jpeg,image/png,image/webp"></div><div class="file-note">One JPG, PNG or WebP · up to 8 MB</div></div>
+      <button class="btn wide" id="publishShare" type="button">Post</button><div class="message" id="shareMsg"></div>
     </div>
 
-    <div id="askView" hidden>
-      <button class="act" id="backAsk" type="button" style="margin-bottom:14px">← Back</button>
-      <div class="field">
-        <label for="stuck">What’s going on?</label>
-        <textarea id="stuck" maxlength="2000" placeholder="What are you trying to solve?"></textarea>
-      </div>
-      <div class="field">
-        <label for="tried">What have you tried? <span class="dim">(optional)</span></label>
-        <textarea id="tried" maxlength="2000" placeholder="Anything the room should know."></textarea>
-      </div>
-      <div class="field">
-        <label for="result">What would a good result look like? <span class="dim">(optional)</span></label>
-        <textarea id="result" maxlength="2000" placeholder="What are you trying to make happen?"></textarea>
-      </div>
-      <button class="btn wide" id="postAsk" type="button">Post question</button>
-      <div class="message" id="askMsg"></div>
+    <div id="askForm" hidden>
+      <button class="act" data-compose-back type="button">← Back</button>
+      <div class="field" style="margin-top:13px"><label for="askBody">What’s going on?</label><textarea id="askBody" maxlength="4000" placeholder="What are you trying to solve?"></textarea></div>
+      <div class="field"><label for="askTried">What have you tried? <span class="dim">(optional)</span></label><textarea id="askTried" maxlength="2500"></textarea></div>
+      <div class="field"><label for="askResult">What would a good result look like? <span class="dim">(optional)</span></label><textarea id="askResult" maxlength="2500"></textarea></div>
+      <button class="btn wide" id="publishAsk" type="button">Ask the network</button><div class="message" id="askMsg"></div>
     </div>
 
-    <div id="shareView" hidden>
-      <button class="act" id="backShare" type="button" style="margin-bottom:14px">← Back</button>
-      <div class="field">
-        <label for="shareBody">What do you want to share?</label>
-        <textarea id="shareBody" maxlength="4000" placeholder="A win, lesson, update or useful thought."></textarea>
-      </div>
-      <button class="btn wide" id="postShare" type="button">Post</button>
-      <div class="message" id="shareMsg"></div>
+    <div id="resourceForm" hidden>
+      <button class="act" data-compose-back type="button">← Back</button>
+      <div class="field" style="margin-top:13px"><label for="resourceTitle">Resource title</label><input id="resourceTitle" maxlength="180" placeholder="Technician interview scorecard"></div>
+      <div class="field"><label for="resourceCategory">Category</label><select id="resourceCategory"><option>Owner</option><option>Leads</option><option>Sales</option><option>Money</option><option>Team</option><option>Systems</option><option>Marketing</option><option>Reviews</option><option>Referrals</option><option>Customer</option><option>Local</option><option>Other</option></select></div>
+      <div class="field"><label for="resourceNote">Why is this useful?</label><textarea id="resourceNote" maxlength="4000" placeholder="Give members context instead of just dropping a link."></textarea></div>
+      <div class="field"><label for="resourceLink">Website link <span class="dim">(use this or a PDF)</span></label><input id="resourceLink" placeholder="https://"></div>
+      <div class="field"><label for="resourceFile">PDF <span class="dim">(use this or a link)</span></label><input id="resourceFile" type="file" accept="application/pdf"><div class="file-note">PDF · up to 15 MB · available only to signed-in members</div></div>
+      <button class="btn wide" id="publishResource" type="button">Share resource</button><div class="message" id="resourceMsg"></div>
+    </div>
+  </section>
+</div>
+
+<!-- I NEED ROUTER -->
+<div class="sheet-backdrop" id="needSheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="needTitle">
+    <div class="sheet-handle"></div><div class="sheet-head"><h2 id="needTitle">What do you need?</h2><button class="sheet-close" id="closeNeed" type="button">×</button></div>
+    <div class="choice-grid">
+      <a class="choice-row" href="opportunities.html?type=referral#new"><span class="choice-icon">↗</span><span class="choice-copy"><strong>Customer referral</strong><span>Pass or find work through the network.</span></span><span>›</span></a>
+      <a class="choice-row" href="opportunities.html?type=work#new"><span class="choice-icon">↗</span><span class="choice-copy"><strong>Subcontractor / trade partner</strong><span>Find someone to handle a job or overflow.</span></span><span>›</span></a>
+      <a class="choice-row" href="opportunities.html?type=hiring#new"><span class="choice-icon">↗</span><span class="choice-copy"><strong>Employee</strong><span>Post a hiring need.</span></span><span>›</span></a>
+      <a class="choice-row" href="resources.html#recommendations"><span class="choice-icon">✓</span><span class="choice-copy"><strong>Vendor / professional</strong><span>See who members actually recommend.</span></span><span>›</span></a>
+      <button class="choice-row" id="needAdvice" type="button"><span class="choice-icon">?</span><span class="choice-copy"><strong>Business advice</strong><span>Ask owners who have probably dealt with it.</span></span><span>›</span></button>
+      <a class="choice-row" href="directory.html"><span class="choice-icon">◎</span><span class="choice-copy"><strong>Introduction / person</strong><span>Search the trusted member network.</span></span><span>›</span></a>
+      <a class="choice-row" href="helpdesk.html#execute"><span class="choice-icon">→</span><span class="choice-copy"><strong>Get it handled</strong><span>Ask Seek &amp; Scale to help execute.</span></span><span>›</span></a>
     </div>
   </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=ux2"></script>
+<script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network3"></script>
 <script>
 (async function(){
   'use strict';
+  var posts=[],replies=[],opps=[],saved=new Set(),feedMode='all',shareType='update',matches=[];
 
-  function openSheet(){
-    SS.$('postSheet').hidden=false;
-    showChoice();
+  function badge(p){
+    if(p.category==='question')return '<span class="post-badge yellow">Question</span>';
+    if(p.category==='resource')return '<span class="post-badge yellow">Resource</span>';
+    if(p.category==='win')return '<span class="post-badge">Win</span>';
+    if(p.subtype==='local-intel')return '<span class="post-badge yellow">Local intel</span>';
+    if(p.subtype==='introduction')return '<span class="post-badge">New member</span>';
+    if(p.category==='announcement')return '<span class="post-badge">Seek &amp; Scale</span>';
+    return '';
   }
 
-  function closeSheet(){
-    SS.$('postSheet').hidden=true;
+  async function hydrateFiles(rows){
+    await Promise.all(rows.map(async function(p){
+      if(p.attachment_path){
+        try{p._fileUrl=await SS.resolveCommunityFile(p.attachment_path);}catch(e){p._fileUrl='';}
+      }
+    }));
   }
 
-  function showChoice(){
-    SS.$('choiceView').hidden=false;
-    SS.$('askView').hidden=true;
-    SS.$('shareView').hidden=true;
+  function resourceAttachment(p){
+    var html='';
+    if(p.attachment_kind==='image'&&p._fileUrl){html+='<img class="post-image" src="'+SS.esc(p._fileUrl)+'" alt="">';}
+    if(p.attachment_kind==='pdf'&&p._fileUrl){
+      html+='<a class="file-card" href="'+SS.esc(p._fileUrl)+'" target="_blank" rel="noopener"><div class="choice-icon">PDF</div><div class="file-card-main"><div class="file-kind">Member PDF</div><div class="file-title">'+SS.esc(p.attachment_name||p.resource_title||'Open PDF')+'</div></div><span>↗</span></a>';
+    }
+    if(p.link_url){
+      var url=SS.cleanUrl(p.link_url);
+      if(url)html+='<a class="link-card" href="'+SS.esc(url)+'" target="_blank" rel="noopener"><div class="choice-icon">↗</div><div class="link-card-main"><div class="link-host">'+SS.esc(SS.linkHost(url))+'</div><div class="link-title">'+SS.esc(p.resource_title||url)+'</div></div><span>Open</span></a>';
+    }
+    return html;
   }
 
-  function showAsk(){
-    SS.$('choiceView').hidden=true;
-    SS.$('askView').hidden=false;
-    SS.$('shareView').hidden=true;
-    setTimeout(function(){SS.$('stuck').focus();},0);
-  }
-
-  function showShare(){
-    SS.$('choiceView').hidden=true;
-    SS.$('askView').hidden=true;
-    SS.$('shareView').hidden=false;
-    setTimeout(function(){SS.$('shareBody').focus();},0);
-  }
-
-  function postHtml(p,rs){
+  function postCard(p){
     var m=p.author||{full_name:'Seek & Scale'},b=p.business||{};
-    rs=rs||[];
-    var label=p.subtype==='introduction'?'New member':p.category;
-
-    return '<article class="feed-post" data-post="'+SS.esc(p.id)+'">'+
-      '<div class="post-head">'+SS.avatar(m)+
-        '<div class="post-meta">'+
-          '<div class="post-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
-          '<div class="post-business">'+SS.esc(SS.businessLine(m,b))+'</div>'+
-        '</div>'+
-        '<span class="chip '+((p.category==='announcement'||p.subtype==='introduction')?'yellow':'')+'">'+SS.esc(label)+'</span>'+
-      '</div>'+
-      '<div class="post-body">'+SS.esc(p.body)+'</div>'+
-      '<div class="post-tools">'+
-        '<span class="tiny">'+SS.esc(SS.fmtTime(p.created_at))+' · '+rs.length+' '+(rs.length===1?'reply':'replies')+'</span>'+
-        (p.author_member_id===SS.ctx.member.id
-          ? '<button class="act danger" type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>'
-          : '')+
-      '</div>'+
-      '<div class="reply-list">'+
-        rs.map(function(r){
-          var rm=r.author||{full_name:'Member'};
-          return '<div class="reply">'+
-            '<div class="reply-name">'+SS.esc(rm.full_name||'Member')+'</div>'+
-            '<div class="reply-body">'+SS.esc(r.body)+'</div>'+
-          '</div>';
-        }).join('')+
-        '<div class="reply-form">'+
-          '<input data-reply-input="'+SS.esc(p.id)+'" placeholder="Write a useful reply..." maxlength="2000">'+
-          '<button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button>'+
-        '</div>'+
-      '</div>'+
+    var rs=replies.filter(function(r){return r.post_id===p.id;});
+    var savedOn=saved.has('post:'+p.id);
+    return '<article class="network-post" id="post-'+SS.esc(p.id)+'" data-post="'+SS.esc(p.id)+'">'+
+      '<div class="post-inner">'+
+        '<div class="post-author">'+SS.avatar(m)+
+          '<div class="post-author-main"><div class="post-author-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div><div class="post-author-line">'+SS.esc(SS.businessLine(m,b))+' · '+SS.esc(SS.fmtTime(p.created_at))+(p.context_city?' · '+SS.esc(p.context_city):'')+'</div></div>'+badge(p)+
+        '</div>'+ 
+        (p.category==='resource'&&p.resource_title?'<div class="resource-title">'+SS.esc(p.resource_title)+'</div>':'')+
+        (p.body?'<div class="post-copy">'+SS.esc(p.body)+'</div>':'')+
+        resourceAttachment(p)+
+      '</div>'+ 
+      '<div class="post-footer">'+
+        '<button type="button" data-save-item="post" data-save-id="'+SS.esc(p.id)+'" class="'+(savedOn?'saved-on':'')+'">'+(savedOn?'Saved':'Save')+'</button>'+ 
+        '<button type="button" data-focus-reply="'+SS.esc(p.id)+'">Reply'+(rs.length?' · '+rs.length:'')+'</button>'+ 
+        '<button type="button" data-share-post="'+SS.esc(p.id)+'">Share</button>'+ 
+        '<span class="spacer"></span>'+ 
+        (p.author_member_id===SS.ctx.member.id?'<button type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>':'')+
+      '</div>'+ 
+      '<div class="post-replies">'+rs.slice(-3).map(function(r){var rm=r.author||{full_name:'Member'};return '<div class="post-reply"><strong>'+SS.esc(rm.full_name||'Member')+'</strong><br>'+SS.esc(r.body)+'</div>';}).join('')+'</div>'+ 
+      '<div class="reply-compose"><input data-reply-input="'+SS.esc(p.id)+'" maxlength="2000" placeholder="Add a useful reply…"><button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button></div>'+ 
     '</article>';
   }
 
-  async function loadMatchedOpportunities(){
-    var rows=await SS.loadOpportunities(['open'],80);
-    rows=rows.filter(function(o){return o.poster_member_id!==SS.ctx.member.id;});
-
-    rows.forEach(function(o){
-      o._score=SS.opportunityMatchScore(o,SS.ctx.business);
-    });
-
-    rows=rows
-      .filter(function(o){return o._score>=2;})
-      .sort(function(a,b){
-        if(b._score!==a._score)return b._score-a._score;
-        return new Date(b.created_at)-new Date(a.created_at);
-      })
-      .slice(0,3);
-
-    if(!rows.length){
-      SS.$('matchedOpps').innerHTML=
-        '<div class="priority-list">'+
-          '<div class="priority-item">'+
-            '<div class="priority-item-title">Nothing matching you right now.</div>'+
-            '<div class="priority-item-meta">Real opportunities only. Browse the full board or see who is in the network.</div>'+
-            '<div class="priority-item-tools">'+
-              '<a class="act" href="opportunities.html">Open opportunities</a>'+
-              '<a class="act" href="directory.html">Members</a>'+
-            '</div>'+
-          '</div>'+
-        '</div>';
-      return;
-    }
-
-    SS.$('matchedOpps').innerHTML=
-      '<div class="priority-list">'+
-      rows.map(function(o){
-        var poster=o.poster||{full_name:'Member'};
-        return '<article class="priority-item">'+
-          '<div class="priority-item-title">'+SS.esc(o.need)+'</div>'+
-          '<div class="priority-item-meta">'+
-            SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+' · '+SS.esc(poster.full_name)+
-          '</div>'+
-          '<div class="priority-item-tools">'+
-            '<span class="chip yellow">'+(o._score>=3?'Strong match':'Trade match')+'</span>'+
-            '<button class="act solid" type="button" data-claim-opportunity="'+SS.esc(o.id)+'">Claim</button>'+
-            '<a class="act" href="opportunities.html">Details</a>'+
-          '</div>'+
-        '</article>';
-      }).join('')+
-      '</div>';
+  function oppCard(o){
+    var poster=o.poster||{full_name:'Member'},b=o.posterBusiness||{};
+    var score=SS.opportunityMatchScore(o,SS.ctx.business);
+    var savedOn=saved.has('opportunity:'+o.id);
+    return '<article class="network-post opportunity-feed" data-opp="'+SS.esc(o.id)+'">'+
+      '<div class="post-inner"><div class="post-author">'+SS.avatar(poster)+'<div class="post-author-main"><div class="post-author-name">'+SS.esc(poster.full_name||'Member')+'</div><div class="post-author-line">'+SS.esc(SS.businessLine(poster,b))+' · '+SS.esc(SS.fmtTime(o.created_at))+'</div></div><span class="post-badge yellow">'+SS.esc(SS.opportunityTypeLabel(o.opportunity_type))+'</span></div>'+ 
+      '<div class="opp-value">'+SS.esc(o.need)+'</div><div class="post-author-line" style="margin-top:5px">'+SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.timing)+'</div>'+ 
+      (o.details?'<div class="post-copy">'+SS.esc(o.details)+'</div>':'')+
+      '</div>'+ 
+      '<div class="post-footer">'+
+        (o.poster_member_id!==SS.ctx.member.id?'<button type="button" data-claim-opportunity="'+SS.esc(o.id)+'">Claim</button>':'')+
+        '<a href="opportunities.html">Details</a>'+ 
+        '<button type="button" data-save-item="opportunity" data-save-id="'+SS.esc(o.id)+'" class="'+(savedOn?'saved-on':'')+'">'+(savedOn?'Saved':'Save')+'</button>'+ 
+        (score>=2?'<span class="spacer"></span><span class="post-badge yellow">'+(score>=3?'Strong match':'Trade match')+'</span>':'')+
+      '</div></article>';
   }
 
-  async function loadCommunity(){
-    var posts=await SS.loadPosts(['discussion','question','win','announcement'],80);
-    var replies=await SS.loadReplies(posts.map(function(p){return p.id;}));
-    var byPost={};
+  function renderFeed(){
+    var items=[];
+    posts.forEach(function(p){items.push({kind:'post',date:p.created_at,p:p});});
+    opps.filter(function(o){return o.status==='open';}).slice(0,12).forEach(function(o){items.push({kind:'opp',date:o.created_at,o:o});});
 
-    replies.forEach(function(r){
-      (byPost[r.post_id]||(byPost[r.post_id]=[])).push(r);
+    items=items.filter(function(x){
+      if(feedMode==='all')return true;
+      if(feedMode==='opportunities')return x.kind==='opp';
+      if(x.kind!=='post')return false;
+      if(feedMode==='questions')return x.p.category==='question';
+      if(feedMode==='resources')return x.p.category==='resource';
+      if(feedMode==='intel')return x.p.subtype==='local-intel';
+      return true;
     });
 
-    var unanswered=posts.filter(function(p){
-      return p.category==='question' && (byPost[p.id]||[]).length===0;
-    }).slice(0,3);
+    items.sort(function(a,b){
+      var ap=a.kind==='post'&&a.p.is_pinned?1:0,bp=b.kind==='post'&&b.p.is_pinned?1:0;
+      if(bp!==ap)return bp-ap;
+      return new Date(b.date)-new Date(a.date);
+    });
 
-    SS.$('unanswered').innerHTML=unanswered.length
-      ? '<div class="priority-list">'+unanswered.map(function(p){return postHtml(p,[]);}).join('')+'</div>'
-      : '<div class="priority-list"><div class="priority-item"><div class="priority-item-title">The room is caught up.</div><div class="priority-item-meta">No unanswered questions right now.</div></div></div>';
+    SS.$('feed').innerHTML=items.length?items.slice(0,60).map(function(x){return x.kind==='post'?postCard(x.p):oppCard(x.o);}).join(''):
+      '<div class="network-post"><div class="post-inner"><strong>The network is quiet here right now.</strong><div class="post-author-line" style="margin-top:5px">Share something useful, ask a real question, or see who is in the network.</div></div></div>';
 
-    var unansweredIds={};
-    unanswered.forEach(function(p){unansweredIds[p.id]=true;});
+    if(location.hash&&location.hash.indexOf('#post-')===0){setTimeout(function(){var el=document.querySelector(location.hash);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},50);}
+  }
 
-    var around=posts
-      .filter(function(p){return !unansweredIds[p.id];})
-      .sort(function(a,b){
-        if(!!a.is_pinned!==!!b.is_pinned)return a.is_pinned?-1:1;
-        return new Date(b.created_at)-new Date(a.created_at);
-      })
-      .slice(0,25);
+  function renderForYou(){
+    var matched=opps.filter(function(o){return o.status==='open'&&o.poster_member_id!==SS.ctx.member.id&&SS.opportunityMatchScore(o,SS.ctx.business)>=2;}).slice(0,2);
+    var unanswered=posts.filter(function(p){return p.category==='question'&&!replies.some(function(r){return r.post_id===p.id;})&&p.author_member_id!==SS.ctx.member.id;}).slice(0,1);
+    var rows=[];
+    matched.forEach(function(o){rows.push('<a class="for-you-item" href="opportunities.html"><span class="post-badge yellow">'+SS.esc(SS.opportunityTypeLabel(o.opportunity_type))+'</span><span class="copy">'+SS.esc(o.need)+'<span class="meta">'+SS.esc(o.city)+' · '+SS.esc(o.timing)+'</span></span><span>›</span></a>');});
+    unanswered.forEach(function(p){rows.push('<a class="for-you-item" href="#post-'+SS.esc(p.id)+'"><span class="post-badge">Question</span><span class="copy">'+SS.esc((p.body||'').slice(0,120))+'<span class="meta">No replies yet</span></span><span>›</span></a>');});
+    SS.$('forYou').innerHTML=rows.length?'<div class="for-you-strip"><div class="for-you-head"><strong>For you</strong><span>Worth checking</span></div><div class="for-you-items">'+rows.join('')+'</div></div>':'';
+  }
 
-    SS.$('room').innerHTML=around.length
-      ? '<div class="priority-list">'+around.map(function(p){return postHtml(p,byPost[p.id]||[]);}).join('')+'</div>'
-      : '<div class="priority-list"><div class="priority-item">'+
-          '<div class="priority-item-title">The room is new.</div>'+
-          '<div class="priority-item-meta">See who is here, then post when you have something real to ask or share.</div>'+
-          '<div class="priority-item-tools"><a class="act" href="directory.html">See members</a></div>'+
-        '</div></div>';
+  function renderRail(){
+    var week=Date.now()-7*86400000;
+    var openCount=opps.filter(function(o){return o.status==='open';}).length;
+    var unanswered=posts.filter(function(p){return p.category==='question'&&new Date(p.created_at).getTime()>=week&&!replies.some(function(r){return r.post_id===p.id;});}).length;
+    var resourceCount=posts.filter(function(p){return p.category==='resource'&&new Date(p.created_at).getTime()>=week;}).length;
+    SS.$('pulseRail').innerHTML='<div class="rail-card"><div class="rail-title">This week</div><div class="pulse"><div><strong>'+openCount+'</strong><span>open needs</span></div><div><strong>'+unanswered+'</strong><span>questions</span></div><div><strong>'+resourceCount+'</strong><span>resources</span></div></div></div>';
+
+    var people=matches.filter(function(x){return x.member;}).slice(0,3);
+    SS.$('peopleRail').innerHTML=people.length?'<div class="rail-card"><div class="rail-title">People you should know</div><div class="rail-list">'+people.map(function(x){return '<div class="rail-item"><strong>'+SS.esc(x.member.full_name)+'</strong><span>'+SS.esc(SS.businessLine(x.member,x.business))+(x.reason?' · '+SS.esc(x.reason):'')+'</span><br><a href="shop.html?id='+encodeURIComponent(x.member.id)+'" style="text-decoration:underline">View member</a>'+(x.id?' · <button type="button" data-match-connected="'+SS.esc(x.id)+'" style="border:0;background:transparent;text-decoration:underline;padding:0;font:inherit">We connected</button>':'')+'</div>';}).join('')+'</div></div>':'';
+
+    var intel=posts.filter(function(p){return p.subtype==='local-intel';}).slice(0,3);
+    SS.$('intelRail').innerHTML=intel.length?'<div class="rail-card"><div class="rail-title">Local intel</div><div class="rail-list">'+intel.map(function(p){return '<a class="rail-item" href="#post-'+SS.esc(p.id)+'"><strong>'+SS.esc((p.body||'').slice(0,90))+'</strong><span>'+SS.esc(p.context_city||SS.businessLine(p.author,p.business))+'</span></a>';}).join('')+'</div></div>':'';
+  }
+
+  function closeComposer(){SS.$('composerSheet').hidden=true;history.replaceState(null,'',location.pathname+location.hash);}
+  function showChoice(){['composerChoice','shareForm','askForm','resourceForm'].forEach(function(id){SS.$(id).hidden=id!=='composerChoice';});SS.$('composerTitle').textContent='Share with the network';}
+  function showForm(kind){['composerChoice','shareForm','askForm','resourceForm'].forEach(function(id){SS.$(id).hidden=id!==(kind+'Form');});SS.$('composerTitle').textContent=kind==='share'?'Share something':kind==='ask'?'Ask the network':'Share a resource';setTimeout(function(){var id=kind==='share'?'shareBody':kind==='ask'?'askBody':'resourceTitle';SS.$(id).focus();},0);}
+  function openComposer(kind){SS.$('composerSheet').hidden=false;if(kind)showForm(kind);else showChoice();}
+
+  async function refresh(){
+    var data=await Promise.all([SS.loadPosts(['discussion','question','win','announcement','resource'],120),SS.loadOpportunities(null,100),SS.loadSavedSet(),SS.loadMemberMatches()]);
+    posts=data[0];opps=data[1];saved=data[2];matches=data[3];
+    if(!matches.length){
+      var members=await SS.loadMembers();
+      var fallback=members.filter(function(x){return x.member.id!==SS.ctx.member.id&&x.business&&SS.ctx.business&&SS.looseMatch(x.business.city,SS.ctx.business.city);}).slice(0,2);
+      matches=fallback.map(function(x){return {id:null,member:x.member,business:x.business,reason:'Also serves '+(x.business.city||'your area')};});
+    }
+    replies=await SS.loadReplies(posts.map(function(p){return p.id;}));
+    await hydrateFiles(posts);
+    renderForYou();renderFeed();renderRail();
   }
 
   try{
     await SS.requireMember('home');
+    SS.$('composerAvatar').innerHTML=SS.avatar(SS.ctx.member);
+    SS.$('openComposer').addEventListener('click',function(){openComposer();});
+    document.querySelectorAll('[data-open-compose]').forEach(function(b){b.addEventListener('click',function(){openComposer(b.dataset.openCompose);});});
+    SS.$('closeComposer').addEventListener('click',closeComposer);
+    SS.$('composerSheet').addEventListener('click',function(e){if(e.target===SS.$('composerSheet'))closeComposer();});
+    document.querySelectorAll('[data-compose-choice]').forEach(function(b){b.addEventListener('click',function(){showForm(b.dataset.composeChoice);});});
+    document.querySelectorAll('[data-compose-back]').forEach(function(b){b.addEventListener('click',showChoice);});
 
-    SS.$('openPost').addEventListener('click',openSheet);
-    SS.$('closePost').addEventListener('click',closeSheet);
-    SS.$('postSheet').addEventListener('click',function(e){
-      if(e.target===SS.$('postSheet'))closeSheet();
-    });
-    SS.$('chooseAsk').addEventListener('click',showAsk);
-    SS.$('chooseShare').addEventListener('click',showShare);
-    SS.$('backAsk').addEventListener('click',showChoice);
-    SS.$('backShare').addEventListener('click',showChoice);
+    SS.$('shareType').addEventListener('click',function(e){var b=e.target.closest('[data-share-type]');if(!b)return;shareType=b.dataset.shareType;SS.$('shareType').querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});SS.$('intelCityField').hidden=shareType!=='local-intel';if(shareType==='local-intel'&&!SS.$('intelCity').value&&SS.ctx.business)SS.$('intelCity').value=SS.ctx.business.city||'';});
 
-    SS.$('postAsk').addEventListener('click',async function(){
-      var stuck=SS.$('stuck').value.trim();
-      var tried=SS.$('tried').value.trim();
-      var result=SS.$('result').value.trim();
-
-      if(stuck.length<4){
-        SS.$('askMsg').textContent='Tell the room what is going on first.';
-        SS.$('askMsg').className='message bad';
-        return;
-      }
-
-      var body=stuck;
-      if(tried)body+='\n\nWhat I’ve tried:\n'+tried;
-      if(result)body+='\n\nA good result would be:\n'+result;
-
-      var btn=this;
-      btn.disabled=true;
-      btn.textContent='Posting…';
-
+    SS.$('publishShare').addEventListener('click',async function(){
+      var body=SS.$('shareBody').value.trim();if(body.length<2){SS.$('shareMsg').textContent='Write something first.';SS.$('shareMsg').className='message bad';return;}
+      var btn=this;btn.disabled=true;btn.textContent='Posting…';
       try{
-        var r=await SS.client.from('posts').insert({
-          author_member_id:SS.ctx.member.id,
-          category:'question',
-          subtype:'structured-ask',
-          body:body
-        });
-        if(r.error)throw r.error;
-
-        SS.$('stuck').value='';
-        SS.$('tried').value='';
-        SS.$('result').value='';
-        closeSheet();
-        await loadCommunity();
-      }catch(e){
-        SS.$('askMsg').textContent=e.message||'Could not post question.';
-        SS.$('askMsg').className='message bad';
-      }finally{
-        btn.disabled=false;
-        btn.textContent='Post question';
-      }
+        var attachment=null,file=SS.$('shareImage').files&&SS.$('shareImage').files[0];if(file)attachment=await SS.uploadCommunityFile(file);
+        var category=shareType==='win'?'win':'discussion';var subtype=shareType==='local-intel'?'local-intel':'share';
+        var r=await SS.client.rpc('create_network_post',{p_category:category,p_subtype:subtype,p_body:body,p_resource_title:null,p_link_url:SS.cleanUrl(SS.$('shareLink').value)||null,p_attachment_path:attachment?attachment.path:null,p_attachment_name:attachment?attachment.name:null,p_attachment_kind:attachment?attachment.kind:null,p_context_city:shareType==='local-intel'?SS.$('intelCity').value:null});if(r.error)throw r.error;
+        SS.$('shareBody').value='';SS.$('shareLink').value='';SS.$('shareImage').value='';closeComposer();await refresh();
+      }catch(e){SS.$('shareMsg').textContent=e.message||'Could not post.';SS.$('shareMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Post';}
     });
 
-    SS.$('postShare').addEventListener('click',async function(){
-      var text=SS.$('shareBody').value.trim();
-
-      if(text.length<4){
-        SS.$('shareMsg').textContent='Write something first.';
-        SS.$('shareMsg').className='message bad';
-        return;
-      }
-
-      var btn=this;
-      btn.disabled=true;
-      btn.textContent='Posting…';
-
-      try{
-        var r=await SS.client.from('posts').insert({
-          author_member_id:SS.ctx.member.id,
-          category:'discussion',
-          subtype:'share',
-          body:text
-        });
-        if(r.error)throw r.error;
-
-        SS.$('shareBody').value='';
-        closeSheet();
-        await loadCommunity();
-      }catch(e){
-        SS.$('shareMsg').textContent=e.message||'Could not post.';
-        SS.$('shareMsg').className='message bad';
-      }finally{
-        btn.disabled=false;
-        btn.textContent='Post';
-      }
+    SS.$('publishAsk').addEventListener('click',async function(){
+      var q=SS.$('askBody').value.trim();if(q.length<3){SS.$('askMsg').textContent='Ask the question first.';SS.$('askMsg').className='message bad';return;}
+      var body=q,tried=SS.$('askTried').value.trim(),result=SS.$('askResult').value.trim();if(tried)body+='\n\nWhat I’ve tried:\n'+tried;if(result)body+='\n\nA good result would be:\n'+result;
+      var btn=this;btn.disabled=true;btn.textContent='Posting…';try{var r=await SS.client.rpc('create_network_post',{p_category:'question',p_subtype:'structured-ask',p_body:body,p_resource_title:null,p_link_url:null,p_attachment_path:null,p_attachment_name:null,p_attachment_kind:null,p_context_city:null});if(r.error)throw r.error;SS.$('askBody').value='';SS.$('askTried').value='';SS.$('askResult').value='';closeComposer();await refresh();}catch(e){SS.$('askMsg').textContent=e.message;SS.$('askMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Ask the network';}
     });
+
+    SS.$('publishResource').addEventListener('click',async function(){
+      var title=SS.$('resourceTitle').value.trim(),note=SS.$('resourceNote').value.trim(),link=SS.cleanUrl(SS.$('resourceLink').value),file=SS.$('resourceFile').files&&SS.$('resourceFile').files[0];
+      if(!title){SS.$('resourceMsg').textContent='Add a title.';SS.$('resourceMsg').className='message bad';return;}if(!link&&!file){SS.$('resourceMsg').textContent='Add a PDF or website link.';SS.$('resourceMsg').className='message bad';return;}
+      var btn=this;btn.disabled=true;btn.textContent='Sharing…';try{var attachment=file?await SS.uploadCommunityFile(file):null;if(attachment&&attachment.kind!=='pdf')throw new Error('Resources accept PDFs or website links.');var r=await SS.client.rpc('create_network_post',{p_category:'resource',p_subtype:SS.$('resourceCategory').value,p_body:note,p_resource_title:title,p_link_url:link||null,p_attachment_path:attachment?attachment.path:null,p_attachment_name:attachment?attachment.name:null,p_attachment_kind:attachment?attachment.kind:null,p_context_city:null});if(r.error)throw r.error;SS.$('resourceTitle').value='';SS.$('resourceNote').value='';SS.$('resourceLink').value='';SS.$('resourceFile').value='';closeComposer();await refresh();}catch(e){SS.$('resourceMsg').textContent=e.message;SS.$('resourceMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Share resource';}
+    });
+
+    SS.$('feedFilter').addEventListener('click',function(e){var b=e.target.closest('[data-feed]');if(!b)return;feedMode=b.dataset.feed;SS.$('feedFilter').querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});renderFeed();});
+
+    SS.$('openNeed').addEventListener('click',function(){SS.$('needSheet').hidden=false;});SS.$('closeNeed').addEventListener('click',function(){SS.$('needSheet').hidden=true;});SS.$('needSheet').addEventListener('click',function(e){if(e.target===SS.$('needSheet'))SS.$('needSheet').hidden=true;});SS.$('needAdvice').addEventListener('click',function(){SS.$('needSheet').hidden=true;openComposer('ask');});
 
     document.addEventListener('click',async function(e){
-      var claim=e.target.closest('[data-claim-opportunity]');
-      if(claim){
-        claim.disabled=true;
-        try{
-          var c=await SS.client.rpc('claim_opportunity',{
-            p_opportunity_id:claim.dataset.claimOpportunity
-          });
-          if(c.error)throw c.error;
-          SS.toast('Claimed. Reach out to the person who posted it.');
-          await loadMatchedOpportunities();
-        }catch(err){
-          SS.toast(err.message);
-          claim.disabled=false;
-        }
-        return;
-      }
-
-      var reply=e.target.closest('[data-reply]');
-      if(reply){
-        var postId=reply.getAttribute('data-reply');
-        var input=document.querySelector('[data-reply-input="'+CSS.escape(postId)+'"]');
-        var text=input&&input.value.trim();
-        if(!text)return;
-
-        reply.disabled=true;
-        var rr=await SS.client.from('post_replies').insert({
-          post_id:postId,
-          author_member_id:SS.ctx.member.id,
-          body:text
-        });
-
-        if(rr.error){
-          SS.toast(rr.error.message);
-          reply.disabled=false;
-          return;
-        }
-
-        await loadCommunity();
-        return;
-      }
-
-      var del=e.target.closest('[data-delete-post]');
-      if(del){
-        if(!confirm('Delete this post?'))return;
-        var dr=await SS.client.from('posts').delete().eq('id',del.dataset.deletePost);
-        if(dr.error){SS.toast(dr.error.message);return;}
-        await loadCommunity();
-      }
+      var save=e.target.closest('[data-save-item]');if(save){var type=save.dataset.saveItem,id=save.dataset.saveId;save.disabled=true;try{var yes=await SS.toggleSave(type,id);if(yes)saved.add(type+':'+id);else saved.delete(type+':'+id);save.textContent=yes?'Saved':'Save';save.classList.toggle('saved-on',yes);}catch(err){SS.toast(err.message);}finally{save.disabled=false;}return;}
+      var claim=e.target.closest('[data-claim-opportunity]');if(claim){claim.disabled=true;try{var c=await SS.client.rpc('claim_opportunity',{p_opportunity_id:claim.dataset.claimOpportunity});if(c.error)throw c.error;SS.toast('Claimed. Open the opportunity to contact the poster.');await refresh();}catch(err){SS.toast(err.message);claim.disabled=false;}return;}
+      var reply=e.target.closest('[data-reply]');if(reply){var id=reply.dataset.reply,input=document.querySelector('[data-reply-input="'+CSS.escape(id)+'"]'),text=input&&input.value.trim();if(!text)return;reply.disabled=true;var rr=await SS.client.from('post_replies').insert({post_id:id,author_member_id:SS.ctx.member.id,body:text});if(rr.error){SS.toast(rr.error.message);reply.disabled=false;return;}await refresh();return;}
+      var focus=e.target.closest('[data-focus-reply]');if(focus){var input=document.querySelector('[data-reply-input="'+CSS.escape(focus.dataset.focusReply)+'"]');if(input)input.focus();return;}
+      var share=e.target.closest('[data-share-post]');if(share){var url=location.origin+location.pathname+'#post-'+share.dataset.sharePost;try{if(navigator.share)await navigator.share({title:'Seek & Scale',url:url});else{await navigator.clipboard.writeText(url);SS.toast('Post link copied.');}}catch(err){}return;}
+      var connected=e.target.closest('[data-match-connected]');if(connected){connected.disabled=true;var mc=await SS.client.rpc('set_my_match_status',{p_id:connected.dataset.matchConnected,p_status:'connected'});if(mc.error)SS.toast(mc.error.message);else{SS.toast('Connection recorded.');await refresh();}return;}
+      var del=e.target.closest('[data-delete-post]');if(del){if(!confirm('Delete this post?'))return;var dr=await SS.client.from('posts').delete().eq('id',del.dataset.deletePost);if(dr.error){SS.toast(dr.error.message);return;}await refresh();}
     });
 
-    document.addEventListener('keydown',function(e){
-      if(e.key==='Escape'&&!SS.$('postSheet').hidden)closeSheet();
-      if(e.key==='Enter'&&e.target.matches('[data-reply-input]')){
-        e.preventDefault();
-        var id=e.target.dataset.replyInput;
-        var b=document.querySelector('[data-reply="'+CSS.escape(id)+'"]');
-        if(b)b.click();
-      }
-    });
-
-    await Promise.all([loadMatchedOpportunities(),loadCommunity()]);
-  }catch(e){
-    if(e.message!=='signin'&&e.message!=='inactive'){
-      SS.pageError('matchedOpps',e.message);
-    }
-  }
+    var params=new URLSearchParams(location.search);var compose=params.get('compose');if(compose&&['share','ask','resource'].indexOf(compose)!==-1)openComposer(compose);
+    await refresh();
+  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('feed',e.message);}
 })();
-</script>
-</body>
-</html>
+</script></body></html>

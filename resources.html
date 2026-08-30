@@ -1,145 +1,63 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111111"><title>Resources · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=community-content1"><link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
-<style>
-.resource-hero{border:1.5px solid #111;border-radius:20px;padding:18px;margin-bottom:16px;background:#fff}
-.resource-hero strong{font-size:18px;letter-spacing:-.015em}
-.resource-filters{display:flex;gap:7px;overflow:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.resource-filters::-webkit-scrollbar{display:none}
-.rf{white-space:nowrap;border:1px solid #D8D8D8;background:#fff;border-radius:999px;padding:7px 11px;font:inherit;font-size:12px;font-weight:760;cursor:pointer}
-.rf.on{background:#111;color:#fff;border-color:#111}
-.resource-grid{display:grid;gap:10px}
-.resource-card{border:1px solid #E4E4E4;border-radius:17px;background:#fff;overflow:hidden}
-.resource-card[open]{border-color:#BDBDBD}
-.resource-summary{list-style:none;cursor:pointer;padding:15px 16px;display:flex;align-items:flex-start;gap:12px}
-.resource-summary::-webkit-details-marker{display:none}
-.resource-summary-main{flex:1;min-width:0}
-.resource-title{font-size:15px;font-weight:820;letter-spacing:-.012em;line-height:1.25}
-.resource-meta{display:flex;gap:7px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.resource-plus{font-size:20px;line-height:1;color:#777;transition:.15s transform}
-.resource-card[open] .resource-plus{transform:rotate(45deg)}
-.resource-content{border-top:1px solid #EDEDED;padding:15px 16px 17px}
-.resource-text{white-space:pre-wrap;font-size:14px;line-height:1.58;color:#222}
-.resource-actions{display:flex;justify-content:flex-end;margin-top:14px}
-</style>
-</head><body>
-<header class="top" id="top"></header>
-<div class="shell">
-  <aside class="side" id="side"></aside>
-  <main>
-    <h1>Resources</h1>
-    <p class="sub">Simple tools for the problems service-business owners deal with every week.</p>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Resources · seek+scale.</title>
+<link rel="stylesheet" href="assets/app.css?v=network3"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png"></head><body>
+<header class="top" id="top"></header><div class="shell"><aside class="side" id="side"></aside><main>
+<div class="compact-page-head"><div class="head-copy"><h1>Resources</h1><p class="sub">Useful things shared by people in the network. Find it once. Use it again.</p></div><a class="btn sm post-button" href="home.html?compose=resource">+ Share</a></div>
+<div class="hub-tabs" id="tabsHub"><button class="on" data-tab="resources">Resources</button><button data-tab="recommendations">Trusted recommendations</button><button data-tab="saved">Saved</button></div>
+<div class="searchbox" id="searchWrap"><input id="search" type="search" placeholder="Search resources…"></div>
+<section id="resourceView"><div id="resourceFilters" class="feed-filter"></div><div id="resourceList"><div class="loading">Loading resources…</div></div></section>
+<section id="recommendView" hidden><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="flex:1"><strong>Who does the network actually use?</strong><div class="tiny">Member recommendations, not paid placement.</div></div><button class="act solid" id="addRecommendation" type="button">+ Recommend</button></div><div id="recommendList"></div></section>
+<section id="savedView" hidden><div id="savedList"><div class="loading">Loading saved items…</div></div></section>
+</main></div><nav class="tabs" id="tabs"></nav><a class="help-fab" href="helpdesk.html">Get help</a>
+<div class="sheet-backdrop" id="recommendSheet" hidden><section class="sheet"><div class="sheet-handle"></div><div class="sheet-head"><h2>Recommend a business</h2><button class="sheet-close" id="closeRecommend" type="button">×</button></div>
+<div class="field"><label for="recCategory">Category</label><select id="recCategory"><option>CPA / Accounting</option><option>Attorney</option><option>Insurance</option><option>Banking</option><option>Payroll / HR</option><option>Marketing</option><option>Web / Tech</option><option>Printing / Signs</option><option>Supplier</option><option>Equipment / Repair</option><option>Trade partner</option><option>Other</option></select></div><div class="field"><label for="recName">Business / person</label><input id="recName"></div><div class="field"><label for="recCity">City <span class="dim">(optional)</span></label><input id="recCity"></div><div class="field"><label for="recWebsite">Website <span class="dim">(optional)</span></label><input id="recWebsite" placeholder="https://"></div><div class="field"><label for="recNote">Why do you recommend them?</label><textarea id="recNote" maxlength="1500"></textarea></div><button class="btn wide" id="saveRecommend" type="button">Recommend</button><div class="message" id="recMsg"></div></section></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network3"></script>
+<script>(async function(){
+  'use strict';var resources=[],recommendations=[],saved=new Set(),tab='resources',filter='All';
+  async function hydrate(rows){await Promise.all(rows.map(async function(p){if(p.attachment_path){try{p._fileUrl=await SS.resolveCommunityFile(p.attachment_path);}catch(e){p._fileUrl='';}}}));}
+  function resourceCard(p){var m=p.author||{full_name:'Seek & Scale'},savedOn=saved.has('post:'+p.id),open='';if(p.attachment_kind==='pdf'&&p._fileUrl)open='<a class="act solid" href="'+SS.esc(p._fileUrl)+'" target="_blank" rel="noopener">Open PDF</a>';else if(p.link_url)open='<a class="act solid" href="'+SS.esc(SS.cleanUrl(p.link_url))+'" target="_blank" rel="noopener">Visit website</a>';else open='<button class="act solid" data-copy="'+SS.esc(p.id)+'" type="button">Copy</button>';return '<article class="resource-item"><div style="display:flex;gap:8px;align-items:center"><span class="post-badge yellow">'+SS.esc(p.subtype||'Resource')+'</span>'+(p.is_pinned?'<span class="post-badge">Recommended</span>':'')+'</div><h3>'+SS.esc(p.resource_title||String(p.body||'').split(/\n/)[0]||'Resource')+'</h3><div class="resource-by">Shared by '+SS.esc(m.full_name||'Seek & Scale')+' · '+SS.esc(SS.fmtDate(p.created_at))+'</div>'+(p.body?'<div class="resource-note">'+SS.esc(p.body)+'</div>':'')+'<div class="resource-tools">'+open+'<button class="act '+(savedOn?'saved-on':'')+'" data-save-item="post" data-save-id="'+SS.esc(p.id)+'" type="button">'+(savedOn?'Saved':'Save')+'</button>'+(p.source_post_id?'<a class="act" href="home.html#post-'+encodeURIComponent(p.source_post_id)+'">Source discussion</a>':'')+'</div></article>';}
+  function renderResources(){var q=SS.$('search').value.trim().toLowerCase(),rows=resources.filter(function(p){var matches=filter==='All'||(p.subtype||'Other')===filter,hay=[p.resource_title,p.body,p.subtype,p.link_url,p.attachment_name,p.author&&p.author.full_name].join(' ').toLowerCase();return matches&&(!q||hay.indexOf(q)!==-1);});SS.$('resourceList').innerHTML=rows.length?'<div class="resource-list">'+rows.map(resourceCard).join('')+'</div>':'<div class="card"><div class="empty">No resources match that search.</div></div>';}
+  function groupRecs(){var groups={};recommendations.forEach(function(r){var k=SS.norm(r.business_name)+'|'+SS.norm(r.city)+'|'+SS.norm(r.website);if(!groups[k])groups[k]=[];groups[k].push(r);});return Object.values(groups).sort(function(a,b){return b.length-a.length;});}
+  function renderRecommendations(){var q=SS.$('search').value.trim().toLowerCase();var groups=groupRecs().filter(function(g){var r=g[0],hay=[r.business_name,r.category,r.city,r.website].join(' ').toLowerCase();return !q||hay.indexOf(q)!==-1;});SS.$('recommendList').innerHTML=groups.length?groups.map(function(g){var r=g[0],names=g.map(function(x){return x.recommender&&x.recommender.full_name;}).filter(Boolean),savedOn=saved.has('recommendation:'+r.id);return '<article class="recommend-group"><div style="display:flex;gap:8px;align-items:center"><span class="post-badge">'+SS.esc(r.category)+'</span><span class="recommend-count">Recommended by '+g.length+' '+(g.length===1?'member':'members')+'</span></div><h3>'+SS.esc(r.business_name)+'</h3><div class="resource-by">'+SS.esc(r.city||'')+(names.length?' · '+SS.esc(names.slice(0,3).join(', ')):'')+'</div>'+(g[0].note?'<div class="resource-note">'+SS.esc(g[0].note)+'</div>':'')+'<div class="resource-tools">'+(r.website?'<a class="act solid" href="'+SS.esc(SS.cleanUrl(r.website))+'" target="_blank" rel="noopener">Website</a>':'')+'<button class="act '+(savedOn?'saved-on':'')+'" data-save-item="recommendation" data-save-id="'+SS.esc(r.id)+'" type="button">'+(savedOn?'Saved':'Save')+'</button></div></article>';}).join(''):'<div class="card"><div class="empty">No recommendations match that search yet.</div></div>';}
+  async function renderSaved(){
+    var r=await SS.client.from('saved_items').select('*').order('created_at',{ascending:false});
+    if(r.error)throw r.error;
+    var items=r.data||[],html='';
+    var postIds=items.filter(function(x){return x.item_type==='post';}).map(function(x){return x.item_id;});
+    var memberIds=items.filter(function(x){return x.item_type==='member';}).map(function(x){return x.item_id;});
+    var oppIds=items.filter(function(x){return x.item_type==='opportunity';}).map(function(x){return x.item_id;});
+    var recIds=items.filter(function(x){return x.item_type==='recommendation';}).map(function(x){return x.item_id;});
 
-    <div class="resource-hero">
-      <strong>Use it. Don't study it.</strong>
-      <p class="tiny" style="margin:7px 0 0">Find the problem you have, take the tool you need, and go use it in the business.</p>
-    </div>
-
-    <div class="searchbox"><input id="search" type="search" placeholder="Search scripts, checklists, money, hiring…"></div>
-    <div class="resource-filters" id="filters"></div>
-    <div id="list"><div class="loading">Loading resources…</div></div>
-  </main>
-</div>
-<nav class="tabs" id="tabs"></nav>
-<a class="help-fab" href="helpdesk.html">Get help</a>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=community-content1"></script>
-<script>
-(async function(){
-  try{
-    await SS.requireMember('resources');
-
-    var all=await SS.loadPosts(['resource'],200);
-    var selected='All';
-
-    function parts(body){
-      var text=String(body||'').trim();
-      var lines=text.split(/\r?\n/);
-      var title=(lines.shift()||'Resource').trim();
-      var bodyText=lines.join('\n').replace(/^\s+|\s+$/g,'');
-      return {title:title,body:bodyText};
-    }
-
-    var types=['All'].concat(Array.from(new Set(all.map(function(p){return p.subtype||'Other';}))).sort(function(a,b){
-      if(a==='Start Here')return -1;
-      if(b==='Start Here')return 1;
-      return a.localeCompare(b);
-    }));
-
-    SS.$('filters').innerHTML=types.map(function(t){
-      return '<button class="rf'+(t==='All'?' on':'')+'" type="button" data-filter="'+SS.esc(t)+'">'+SS.esc(t)+'</button>';
-    }).join('');
-
-    function render(){
-      var q=SS.$('search').value.trim().toLowerCase();
-      var rows=all.filter(function(p){
-        var x=parts(p.body);
-        var matchesType=selected==='All'||(p.subtype||'Other')===selected;
-        var hay=(x.title+' '+x.body+' '+(p.subtype||'')).toLowerCase();
-        return matchesType&&(!q||hay.indexOf(q)!==-1);
-      });
-
-      SS.$('list').innerHTML=rows.length
-        ? '<div class="resource-grid">'+rows.map(function(p){
-            var x=parts(p.body);
-            var m=p.author||{full_name:'Seek & Scale'};
-            var open=p.is_pinned?' open':'';
-            return '<details class="resource-card"'+open+'>'+
-              '<summary class="resource-summary">'+
-                '<div class="resource-summary-main">'+
-                  '<div class="resource-title">'+SS.esc(x.title)+'</div>'+
-                  '<div class="resource-meta">'+
-                    '<span class="chip '+(p.is_pinned?'yellow':'')+'">'+SS.esc(p.subtype||'Resource')+'</span>'+
-                    (p.is_pinned?'<span class="tiny">Recommended</span>':'')+
-                  '</div>'+
-                '</div>'+
-                '<div class="resource-plus">+</div>'+
-              '</summary>'+
-              '<div class="resource-content">'+
-                '<div class="resource-text">'+SS.esc(x.body)+'</div>'+
-                '<div class="resource-actions"><button class="act solid" type="button" data-copy-resource="'+SS.esc(p.id)+'">Copy</button></div>'+
-                '<div class="tiny" style="margin-top:10px">Shared by '+SS.esc(m.full_name||'Seek & Scale')+'</div>'+
-              '</div>'+
-            '</details>';
-          }).join('')+'</div>'
-        : '<div class="card"><div class="empty">No resources match this search.</div></div>';
-    }
-
-    SS.$('filters').addEventListener('click',function(e){
-      var b=e.target.closest('[data-filter]');
-      if(!b)return;
-      selected=b.getAttribute('data-filter');
-      document.querySelectorAll('.rf').forEach(function(x){x.classList.toggle('on',x===b);});
-      render();
-    });
-
-    SS.$('search').addEventListener('input',render);
-
-    SS.$('list').addEventListener('click',async function(e){
-      var b=e.target.closest('[data-copy-resource]');
-      if(!b)return;
-      e.preventDefault();
-      var id=b.getAttribute('data-copy-resource');
-      var p=all.find(function(x){return x.id===id;});
-      if(!p)return;
-      try{
-        await navigator.clipboard.writeText(p.body||'');
-        var old=b.textContent;
-        b.textContent='Copied';
-        setTimeout(function(){b.textContent=old;},1000);
-      }catch(err){
-        SS.toast('Could not copy this resource.');
+    if(postIds.length){
+      var pr=await SS.client.from('posts').select('*').in('id',postIds).eq('status','published').is('deleted_at',null);
+      if(pr.error)throw pr.error;
+      var ps=pr.data||[];
+      var maps={};
+      if(ps.length){
+        var mids=Array.from(new Set(ps.map(function(p){return p.author_member_id;}).filter(Boolean)));
+        var mr=await SS.client.from('members').select('id,full_name').in('id',mids);
+        if(!mr.error)(mr.data||[]).forEach(function(m){maps[m.id]=m;});
       }
-    });
+      ps.forEach(function(p){p.author=maps[p.author_member_id]||null;});
+      await hydrate(ps);
+      var res=ps.filter(function(p){return p.category==='resource';});
+      var other=ps.filter(function(p){return p.category!=='resource';});
+      if(res.length)html+='<div class="saved-group-title">Resources</div><div class="resource-list">'+res.map(resourceCard).join('')+'</div>';
+      if(other.length)html+='<div class="saved-group-title">Posts</div>'+other.map(function(p){return '<div class="resource-item"><span class="post-badge">'+SS.esc(p.subtype==='local-intel'?'Local intel':p.category)+'</span><h3>'+SS.esc((p.body||'Saved post').slice(0,140))+'</h3><div class="resource-by">'+SS.esc(p.author&&p.author.full_name||'Member')+' · '+SS.esc(SS.fmtDate(p.created_at))+'</div><div class="resource-tools"><a class="act solid" href="home.html#post-'+encodeURIComponent(p.id)+'">Open post</a><button class="act saved-on" data-save-item="post" data-save-id="'+SS.esc(p.id)+'" type="button">Saved</button></div></div>';}).join('');
+    }
 
-    render();
-  }catch(e){
-    if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('list',e.message);
+    if(memberIds.length){var members=await SS.loadMembers(),ms=members.filter(function(x){return memberIds.indexOf(x.member.id)!==-1;});if(ms.length)html+='<div class="saved-group-title">Members</div>'+ms.map(SS.memberCard).join('');}
+    if(oppIds.length){var opps=await SS.loadOpportunities(null,250),os=opps.filter(function(o){return oppIds.indexOf(o.id)!==-1;});if(os.length)html+='<div class="saved-group-title">Opportunities</div>'+os.map(function(o){return '<div class="resource-item"><span class="post-badge yellow">'+SS.esc(SS.opportunityTypeLabel(o.opportunity_type))+'</span><h3>'+SS.esc(o.need)+'</h3><div class="resource-by">'+SS.esc(o.trade_needed)+' · '+SS.esc(o.city)+' · '+SS.esc(o.status)+'</div><div class="resource-tools"><a class="act solid" href="opportunities.html">Open</a><button class="act saved-on" data-save-item="opportunity" data-save-id="'+SS.esc(o.id)+'" type="button">Saved</button></div></div>';}).join('');}
+    if(recIds.length){var rs=recommendations.filter(function(x){return recIds.indexOf(x.id)!==-1;});if(rs.length)html+='<div class="saved-group-title">Recommendations</div>'+rs.map(function(x){return '<div class="resource-item"><span class="post-badge">'+SS.esc(x.category)+'</span><h3>'+SS.esc(x.business_name)+'</h3><div class="resource-by">'+SS.esc(x.city||'')+'</div><div class="resource-tools">'+(x.website?'<a class="act solid" href="'+SS.esc(SS.cleanUrl(x.website))+'" target="_blank" rel="noopener">Website</a>':'')+'<button class="act saved-on" data-save-item="recommendation" data-save-id="'+SS.esc(x.id)+'" type="button">Saved</button></div></div>';}).join('');}
+    if(!html)html='<div class="card"><div class="empty">Nothing saved yet. Save useful posts, resources, members, opportunities, and recommendations as you browse.</div></div>';
+    SS.$('savedList').innerHTML=html;
   }
-})();
-</script></body></html>
+
+  async function switchTab(next){tab=next;SS.$('tabsHub').querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===tab);});SS.$('resourceView').hidden=tab!=='resources';SS.$('recommendView').hidden=tab!=='recommendations';SS.$('savedView').hidden=tab!=='saved';SS.$('searchWrap').hidden=tab==='saved';SS.$('search').placeholder=tab==='recommendations'?'Search recommendations…':'Search resources…';if(tab==='recommendations')renderRecommendations();if(tab==='saved')await renderSaved();}
+  try{await SS.requireMember('resources');var data=await Promise.all([SS.loadPosts(['resource'],250),SS.loadRecommendations(),SS.loadSavedSet()]);resources=data[0];recommendations=data[1];saved=data[2];await hydrate(resources);var types=['All'].concat(Array.from(new Set(resources.map(function(p){return p.subtype||'Other';}))).sort());SS.$('resourceFilters').innerHTML=types.map(function(t){return '<button class="'+(t==='All'?'on':'')+'" data-resource-filter="'+SS.esc(t)+'">'+SS.esc(t)+'</button>';}).join('');renderResources();
+    SS.$('tabsHub').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b)switchTab(b.dataset.tab);});SS.$('resourceFilters').addEventListener('click',function(e){var b=e.target.closest('[data-resource-filter]');if(!b)return;filter=b.dataset.resourceFilter;SS.$('resourceFilters').querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});renderResources();});SS.$('search').addEventListener('input',function(){if(tab==='resources')renderResources();else if(tab==='recommendations')renderRecommendations();});
+    SS.$('addRecommendation').addEventListener('click',function(){SS.$('recommendSheet').hidden=false;SS.$('recCity').value=SS.ctx.business?SS.ctx.business.city||'':'';});SS.$('closeRecommend').addEventListener('click',function(){SS.$('recommendSheet').hidden=true;});SS.$('saveRecommend').addEventListener('click',async function(){var name=SS.$('recName').value.trim();if(!name){SS.$('recMsg').textContent='Add the business or person.';SS.$('recMsg').className='message bad';return;}var btn=this;btn.disabled=true;btn.textContent='Saving…';try{var r=await SS.client.rpc('create_recommendation',{p_category:SS.$('recCategory').value,p_business_name:name,p_city:SS.$('recCity').value,p_website:SS.cleanUrl(SS.$('recWebsite').value)||null,p_note:SS.$('recNote').value.trim()||null});if(r.error)throw r.error;recommendations=await SS.loadRecommendations();SS.$('recommendSheet').hidden=true;['recName','recWebsite','recNote'].forEach(function(id){SS.$(id).value='';});renderRecommendations();}catch(e){SS.$('recMsg').textContent=e.message;SS.$('recMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Recommend';}});
+    document.addEventListener('click',async function(e){var save=e.target.closest('[data-save-item]');if(save){save.disabled=true;try{var yes=await SS.toggleSave(save.dataset.saveItem,save.dataset.saveId);if(yes)saved.add(save.dataset.saveItem+':'+save.dataset.saveId);else saved.delete(save.dataset.saveItem+':'+save.dataset.saveId);save.textContent=yes?'Saved':'Save';save.classList.toggle('saved-on',yes);}catch(err){SS.toast(err.message);}finally{save.disabled=false;}return;}var copy=e.target.closest('[data-copy]');if(copy){var p=resources.find(function(x){return x.id===copy.dataset.copy;});if(p&&navigator.clipboard){await navigator.clipboard.writeText(p.body||'');SS.toast('Copied.');}}});
+    if(location.hash==='#recommendations')switchTab('recommendations');if(location.hash==='#saved')switchTab('saved');
+  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('resourceList',e.message);}
+})();</script></body></html>

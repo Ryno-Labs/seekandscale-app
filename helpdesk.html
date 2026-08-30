@@ -1,74 +1,9 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111111"><title>Get help · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=community-v1"><link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
-</head><body>
-<header class="top" id="top"></header>
-<div class="shell">
-  <aside class="side" id="side"></aside>
-  <main>
-    <h1>Get help</h1>
-    <p class="sub">Tell Seek &amp; Scale what is stuck. We will look at the problem and figure out the next move.</p>
-
-    <div class="card yellow">
-      <strong>Need execution, not another idea?</strong>
-      <div class="tiny" style="margin-top:5px;color:#444">Send the problem. If it fits, Seek &amp; Scale can help get it done.</div>
-    </div>
-
-    <div class="card">
-      <div class="field"><label for="need">What is stuck?</label><textarea id="need" placeholder="Tell us the problem." maxlength="4000"></textarea></div>
-      <div class="field"><label for="outcome">What would a good result look like?</label><textarea id="outcome" placeholder="Tell us what you want to happen." maxlength="4000"></textarea></div>
-      <div class="field"><label for="notes">Anything else we should know?</label><textarea id="notes" placeholder="Optional" maxlength="4000"></textarea></div>
-      <div class="field"><label for="contact">Best way to contact you</label>
-        <select id="contact"><option value="text">Text</option><option value="phone">Phone</option><option value="email">Email</option></select>
-      </div>
-      <button class="btn wide" id="send" type="button">Send request</button>
-      <div class="message" id="msg" aria-live="polite"></div>
-    </div>
-
-    <h2>Your requests</h2>
-    <div class="card" id="history"><div class="loading">Loading requests…</div></div>
-  </main>
-</div>
-<nav class="tabs" id="tabs"></nav>
-<a class="help-fab" href="helpdesk.html">Get help</a>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js?v=community-v1"></script>
-<script src="assets/app.js?v=community-v1"></script>
-<script>
-(async function(){
-  try{
-    await SS.requireMember('');
-    async function history(){
-      var r=await SS.client.from('help_requests').select('*').eq('requester_member_id',SS.ctx.member.id).order('created_at',{ascending:false});
-      if(r.error)throw r.error;
-      SS.$('history').innerHTML=(r.data||[]).length?(r.data||[]).map(function(x){
-        return '<div class="request"><div class="status-line"><div class="request-title">'+SS.esc(x.need)+'</div><span class="chip yellow">'+SS.esc(x.status)+'</span></div>'+
-          '<div class="request-meta">'+SS.esc(SS.fmtDate(x.created_at))+'</div>'+
-          (x.desired_outcome?'<div class="tiny" style="margin-top:7px"><strong>Goal:</strong> '+SS.esc(x.desired_outcome)+'</div>':'')+
-        '</div>';
-      }).join(''):'<div class="empty">You have not sent a request yet.</div>';
-    }
-
-    SS.$('send').addEventListener('click',async function(){
-      var need=SS.$('need').value.trim(),outcome=SS.$('outcome').value.trim(),notes=SS.$('notes').value.trim();
-      if(need.length<5){SS.$('msg').textContent='Tell us what is stuck first.';SS.$('msg').className='message bad';return;}
-      var btn=this;btn.disabled=true;btn.textContent='Sending…';
-      var r=await SS.client.from('help_requests').insert({
-        requester_member_id:SS.ctx.member.id,
-        business_id:SS.ctx.business?SS.ctx.business.id:null,
-        need:need,desired_outcome:outcome||null,notes:notes||null,
-        preferred_contact:SS.$('contact').value
-      });
-      btn.disabled=false;btn.textContent='Send request';
-      if(r.error){SS.$('msg').textContent=r.error.message;SS.$('msg').className='message bad';return;}
-      SS.$('need').value='';SS.$('outcome').value='';SS.$('notes').value='';
-      SS.$('msg').textContent='Sent. Seek & Scale has it.';SS.$('msg').className='message good';
-      await history();
-    });
-    await history();
-  }catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('history',e.message);}
-})();
-</script></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Get help · seek+scale.</title><link rel="stylesheet" href="assets/app.css?v=network3"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png"></head><body>
+<header class="top" id="top"></header><div class="shell"><aside class="side" id="side"></aside><main><h1>Need help now?</h1><p class="sub">Start with what you need. Seek &amp; Scale should help you find the fastest next move.</p>
+<div class="help-router"><a class="help-choice" href="directory.html"><span class="choice-icon">◎</span><span class="copy"><strong>Find the right person</strong><span>Search members by trade, city, business, or what they can help with.</span></span><span>›</span></a><a class="help-choice" href="home.html?compose=ask"><span class="choice-icon">?</span><span class="copy"><strong>Ask the network</strong><span>Get practical input from other local owners.</span></span><span>›</span></a><a class="help-choice" href="opportunities.html#new"><span class="choice-icon">↗</span><span class="copy"><strong>Post an opportunity or need</strong><span>Work, referral, hiring, talent, vendor, or trade partner.</span></span><span>›</span></a><button class="help-choice" id="showExecute" type="button"><span class="choice-icon">→</span><span class="copy"><strong>Have Seek &amp; Scale handle it</strong><span>When you need execution, not another idea.</span></span><span>›</span></button></div>
+<section id="executeForm" hidden><div class="card yellow"><strong>Tell us what is stuck.</strong><div class="tiny" style="margin-top:4px;color:#444">We will look at the problem and figure out the next move. If it fits, Seek &amp; Scale can help get it done.</div></div><div class="card"><div class="field"><label for="need">What is stuck?</label><textarea id="need" maxlength="4000"></textarea></div><div class="field"><label for="outcome">What would a good result look like?</label><textarea id="outcome" maxlength="4000"></textarea></div><div class="field"><label for="notes">Anything else? <span class="dim">(optional)</span></label><textarea id="notes" maxlength="4000"></textarea></div><div class="field"><label for="contact">Best way to contact you</label><select id="contact"><option value="text">Text</option><option value="phone">Phone</option><option value="email">Email</option></select></div><button class="btn wide" id="send" type="button">Send to Seek &amp; Scale</button><div class="message" id="msg"></div></div></section>
+<h2>Your requests</h2><div class="card" id="history"><div class="loading">Loading requests…</div></div></main></div><nav class="tabs" id="tabs"></nav><a class="help-fab" href="helpdesk.html">Get help</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network3"></script>
+<script>(async function(){try{await SS.requireMember('');async function history(){var r=await SS.client.from('help_requests').select('*').eq('requester_member_id',SS.ctx.member.id).order('created_at',{ascending:false});if(r.error)throw r.error;SS.$('history').innerHTML=(r.data||[]).length?(r.data||[]).map(function(x){return '<div class="request"><div class="status-line"><div class="request-title">'+SS.esc(x.need)+'</div><span class="chip yellow">'+SS.esc(x.status)+'</span></div><div class="request-meta">'+SS.esc(SS.fmtDate(x.created_at))+'</div>'+(x.desired_outcome?'<div class="tiny" style="margin-top:7px"><strong>Goal:</strong> '+SS.esc(x.desired_outcome)+'</div>':'')+'</div>';}).join(''):'<div class="empty">You have not sent a request yet.</div>';}
+SS.$('showExecute').addEventListener('click',function(){SS.$('executeForm').hidden=false;SS.$('need').focus();SS.$('executeForm').scrollIntoView({behavior:'smooth'});});if(location.hash==='#execute'){SS.$('executeForm').hidden=false;}
+SS.$('send').addEventListener('click',async function(){var need=SS.$('need').value.trim(),outcome=SS.$('outcome').value.trim(),notes=SS.$('notes').value.trim();if(need.length<5){SS.$('msg').textContent='Tell us what is stuck first.';SS.$('msg').className='message bad';return;}var btn=this;btn.disabled=true;btn.textContent='Sending…';var r=await SS.client.from('help_requests').insert({requester_member_id:SS.ctx.member.id,business_id:SS.ctx.business?SS.ctx.business.id:null,need:need,desired_outcome:outcome||null,notes:notes||null,preferred_contact:SS.$('contact').value});btn.disabled=false;btn.textContent='Send to Seek & Scale';if(r.error){SS.$('msg').textContent=r.error.message;SS.$('msg').className='message bad';return;}SS.$('need').value='';SS.$('outcome').value='';SS.$('notes').value='';SS.$('msg').textContent='Sent. Seek & Scale has it.';SS.$('msg').className='message good';await history();});await history();}catch(e){if(e.message!=='signin'&&e.message!=='inactive')SS.pageError('history',e.message);}})();</script></body></html>

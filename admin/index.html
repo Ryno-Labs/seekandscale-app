@@ -603,7 +603,7 @@ h2{
         <div class="stats">
           <div class="stat hot">
             <div class="n" id="statMembers">—</div>
-            <div class="l">Active members</div>
+            <div class="l">Members helped · 30d</div>
           </div>
           <div class="stat">
             <div class="n" id="statPosts">—</div>
@@ -612,6 +612,14 @@ h2{
           <div class="stat">
             <div class="n" id="statHelp">—</div>
             <div class="l">Open help requests</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="statValue">—</div>
+            <div class="l">Reported value · 30d</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="statUnanswered">—</div>
+            <div class="l">Unanswered questions</div>
           </div>
         </div>
 
@@ -684,6 +692,21 @@ h2{
         <div class="card" id="adminOpportunityList">
           <div class="empty">Loading opportunities…</div>
         </div>
+      </section>
+
+      <!-- MEMBER MATCHES -->
+      <section class="view" id="view-matches">
+        <h1>Member Matches</h1>
+        <p class="sub">Manually create the first useful introductions. The member sees these as “People you should know.”</p>
+        <div class="card yellow">
+          <div class="grid2">
+            <div class="field"><label for="matchMember">New / target member</label><select id="matchMember"></select></div>
+            <div class="field"><label for="matchWith">Introduce them to</label><select id="matchWith"></select></div>
+          </div>
+          <div class="field"><label for="matchReason">Why should they know each other?</label><input id="matchReason" placeholder="Same area · complementary trades"></div>
+          <button class="btn sm" id="createMatchBtn" type="button">Create match</button><div id="matchMessage" class="message"></div>
+        </div>
+        <div class="card" id="matchList"><div class="empty">Loading matches…</div></div>
       </section>
 
       <!-- POSTS -->
@@ -960,7 +983,7 @@ h2{
 
 <!-- Supabase browser library + existing browser-safe config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../assets/config.js?v=ux2"></script>
+<script src="../assets/config.js?v=network3"></script>
 
 <script>
 /* ==========================================================================
@@ -983,6 +1006,7 @@ h2{
     ['overview','Overview'],
     ['members','Members'],
     ['opportunities','Opportunities'],
+    ['matches','Member Matches'],
     ['posts','Posts'],
     ['resources','Resources'],
     ['help','Get Help Requests'],
@@ -1086,6 +1110,7 @@ h2{
     if(name === 'overview') await loadDashboard();
     if(name === 'members') await loadMembers();
     if(name === 'opportunities') await loadAdminOpportunities();
+    if(name === 'matches') await loadMatches();
     if(name === 'posts') await loadPosts(false);
     if(name === 'resources') await loadPosts(true);
     if(name === 'help') await loadHelp();
@@ -1178,17 +1203,16 @@ h2{
 
   async function loadDashboard(){
     try{
-      var results = await Promise.all([
-        countRows('members', function(q){ return q.eq('status','active'); }),
-        countRows('opportunities', function(q){ return q.eq('status','open'); }),
-        countRows('help_requests', function(q){ return q.in('status',['new','contacted','scoping','in_progress']); })
-      ]);
-      $('statMembers').textContent = results[0];
-      $('statPosts').textContent = results[1];
-      $('statHelp').textContent = results[2];
-    }catch(err){
-      message($('pageMessage'),err.message || 'Could not load dashboard.','bad');
-    }
+      var r=await client.rpc('admin_network_metrics');
+      if(r.error)throw r.error;
+      var x=r.data||{};
+      $('statMembers').textContent=x.members_helped_30d == null ? '0' : x.members_helped_30d;
+      $('statPosts').textContent=x.open_opportunities == null ? '0' : x.open_opportunities;
+      $('statHelp').textContent=await countRows('help_requests',function(q){return q.in('status',['new','contacted','scoping','in_progress']);});
+      $('statUnanswered').textContent=x.unanswered_questions == null ? '0' : x.unanswered_questions;
+      var val=Number(x.reported_value_30d||0);
+      $('statValue').textContent=val ? '$'+new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(val) : '$0';
+    }catch(err){message($('pageMessage'),err.message || 'Could not load dashboard.','bad');}
   }
 
   async function loadMembers(){
@@ -1779,12 +1803,38 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
     }
   }
 
+  async function loadMatches(){
+    var mr=await client.from('members').select('id,full_name,status').eq('status','active').order('full_name');
+    if(mr.error)throw mr.error;
+    var opts=(mr.data||[]).map(function(m){return '<option value="'+esc(m.id)+'">'+esc(m.full_name)+'</option>';}).join('');
+    $('matchMember').innerHTML='<option value="">Choose member</option>'+opts;
+    $('matchWith').innerHTML='<option value="">Choose member</option>'+opts;
+
+    var r=await client.from('member_matches').select('*').order('created_at',{ascending:false}).limit(150);
+    if(r.error){$('matchList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>';return;}
+    var map={};(mr.data||[]).forEach(function(m){map[m.id]=m.full_name;});
+    $('matchList').innerHTML=(r.data||[]).length?(r.data||[]).map(function(x){return '<div class="row"><div class="rd"><div class="rt">'+esc(map[x.member_id]||'Member')+' → '+esc(map[x.matched_member_id]||'Member')+'</div><div class="rs">'+esc(x.reason||'No reason added')+'</div><div class="ra"><span class="chip">'+esc(x.status)+'</span><span class="tiny">'+esc(fmtDate(x.created_at))+'</span><button class="mini" data-delete-match="'+esc(x.id)+'">Remove</button></div></div></div>';}).join(''):'<div class="empty">No curated matches yet.</div>';
+  }
+
+  async function createMatch(){
+    var a=$('matchMember').value,b=$('matchWith').value;
+    if(!a||!b){message($('matchMessage'),'Choose both members.','bad');return;}
+    $('createMatchBtn').disabled=true;
+    try{var r=await client.rpc('admin_create_member_match',{p_member_id:a,p_matched_member_id:b,p_reason:$('matchReason').value.trim()||null});if(r.error)throw r.error;$('matchReason').value='';message($('matchMessage'),'Match created.','good');await loadMatches();}catch(err){message($('matchMessage'),err.message,'bad');}finally{$('createMatchBtn').disabled=false;}
+  }
+
+  async function promotePost(id){
+    var title=window.prompt('Resource title:');if(!title)return;
+    var category=window.prompt('Resource category:','Community Playbook')||'Community Playbook';
+    try{var r=await client.rpc('admin_promote_post_to_resource',{p_post_id:id,p_title:title,p_resource_category:category});if(r.error)throw r.error;message($('pageMessage'),'Copied into Resources.','good');await loadPosts(false);}catch(err){message($('pageMessage'),err.message,'bad');}
+  }
+
   async function loadPosts(resourcesOnly){
     var target = resourcesOnly ? $('resourceList') : $('postList');
 
     var q = client
       .from('posts')
-      .select('id,category,subtype,body,status,is_pinned,created_at,deleted_at,author_member_id')
+      .select('id,category,subtype,body,status,is_pinned,created_at,deleted_at,author_member_id,resource_title,link_url,attachment_name,source_post_id')
       .is('deleted_at',null)
       .order('is_pinned',{ascending:false})
       .order('created_at',{ascending:false})
@@ -1812,7 +1862,7 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
       return '<div class="row">' +
         '<div class="rd">' +
           '<div class="rt">' +
-            esc(resourcesOnly ? (p.subtype || 'Resource') : p.category) +
+            esc(resourcesOnly ? (p.resource_title || p.subtype || 'Resource') : p.category) +
             (p.is_pinned ? ' · Pinned' : '') +
           '</div>' +
           '<div class="rs">' + esc(summary) + '</div>' +
@@ -1822,6 +1872,7 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
             '<button class="mini" data-toggle-pin="' + esc(p.id) + '" data-next-pin="' + (p.is_pinned ? 'false' : 'true') + '" data-resource="' + (resourcesOnly ? 'true' : 'false') + '">' +
               (p.is_pinned ? 'Unpin' : 'Pin') +
             '</button>' +
+            (!resourcesOnly && (p.category==='question'||p.category==='discussion') ? '<button class="mini yellow" data-promote-post="'+esc(p.id)+'">Make resource</button>' : '') +
             '<button class="mini" data-remove-content="' + esc(p.id) + '" data-resource="' + (resourcesOnly ? 'true' : 'false') + '">Remove</button>' +
           '</div>' +
         '</div>' +
@@ -1882,7 +1933,8 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
         author_member_id:adminMember.id,
         category:'resource',
         subtype:$('adminResourceType').value,
-        body:title + '\\n\\n' + body,
+        body:body,
+        resource_title:title,
         status:'published',
         is_pinned:$('adminResourcePinned').checked
       });
@@ -2076,6 +2128,9 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
     if(reopen){adminReopenOpportunity(reopen.dataset.adminReopenOpportunity);}
   });
 
+  $('createMatchBtn').addEventListener('click',createMatch);
+  $('matchList').addEventListener('click',async function(e){var b=e.target.closest('[data-delete-match]');if(!b)return;if(!confirm('Remove this match?'))return;var r=await client.rpc('admin_delete_member_match',{p_id:b.dataset.deleteMatch});if(r.error)message($('pageMessage'),r.error.message,'bad');else await loadMatches();});
+
   $('adminPostBtn').addEventListener('click',publishAdminPost);
   $('adminResourceBtn').addEventListener('click',publishAdminResource);
 
@@ -2089,6 +2144,8 @@ var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId)
       );
       return;
     }
+    var promote=e.target.closest('[data-promote-post]');
+    if(promote){promotePost(promote.dataset.promotePost);return;}
     var remove=e.target.closest('[data-remove-content]');
     if(remove) removeContent(remove.getAttribute('data-remove-content'),false);
   });

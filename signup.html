@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
 <title>Join · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=community-v1">
+<link rel="stylesheet" href="assets/app.css?v=legal31">
 </head>
 <body>
 <div class="login-wrap">
@@ -21,6 +21,15 @@
     <div class="field"><label for="code">Invite code</label><input id="code" placeholder="SS-XXXXXXXX" autocapitalize="characters" autocomplete="off"></div>
     <div class="field"><label for="em">Your email</label><input id="em" type="email" autocomplete="username" placeholder="Your email"></div>
     <div class="field"><label for="pw">Create a password</label><input id="pw" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+
+    <label class="checkline" style="align-items:flex-start;margin:14px 0 16px;line-height:1.45">
+      <input id="legalAgree" type="checkbox" style="margin-top:3px">
+      <span class="tiny" style="font-size:12px">
+        I agree to the <a href="terms.html" target="_blank" rel="noopener" style="text-decoration:underline;font-weight:750">Terms of Use &amp; Member Agreement</a>
+        and <a href="community-guidelines.html" target="_blank" rel="noopener" style="text-decoration:underline;font-weight:750">Community Guidelines</a>,
+        and acknowledge the <a href="privacy.html" target="_blank" rel="noopener" style="text-decoration:underline;font-weight:750">Privacy Policy</a>.
+      </span>
+    </label>
     <button class="btn wide" id="go" type="button">Create my account</button>
     <div class="message" id="msg" aria-live="polite"></div>
     <p class="tiny" style="text-align:center;margin-top:22px">Already a member? <a href="index.html" style="font-weight:750;text-decoration:underline">Sign in</a></p>
@@ -41,14 +50,20 @@
       <a class="btn wide" href="onboarding.html">Build my profile</a>
     </div>
   </div>
+  <p class="tiny" style="text-align:center;margin-top:28px">
+    <a href="terms.html" style="text-decoration:underline">Terms</a> ·
+    <a href="privacy.html" style="text-decoration:underline">Privacy</a> ·
+    <a href="community-guidelines.html" style="text-decoration:underline">Community Guidelines</a>
+  </p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/config.js?v=community-v1"></script>
 <script>
 (function(){
+  var LEGAL_VERSION='2026-08-30-v1';
   var client=null,form=document.getElementById('form'),confirmBox=document.getElementById('confirm'),done=document.getElementById('done');
-  var codeInput=document.getElementById('code'),emailInput=document.getElementById('em'),passwordInput=document.getElementById('pw'),go=document.getElementById('go'),msg=document.getElementById('msg');
+  var codeInput=document.getElementById('code'),emailInput=document.getElementById('em'),passwordInput=document.getElementById('pw'),legalAgree=document.getElementById('legalAgree'),go=document.getElementById('go'),msg=document.getElementById('msg');
   function show(t,bad){msg.textContent=t||'';msg.className='message '+(bad?'bad':'');}
   function code(){return (codeInput.value||'').trim().toUpperCase();}
   function returnUrl(c){return location.origin+location.pathname+'?invite='+encodeURIComponent(c);}
@@ -58,7 +73,18 @@
     var r=await client.rpc('claim_member_invite',{p_code:c});
     if(r.error)throw r.error;
     if(r.data&&r.data.ok===false)throw new Error(r.data.error||'This invitation could not be activated.');
-    location.replace('onboarding.html');
+
+    var userResult=await client.auth.getUser();
+    var metadata=userResult.data&&userResult.data.user?userResult.data.user.user_metadata||{}:{};
+
+    if(metadata.legal_version===LEGAL_VERSION){
+      var legal=await client.rpc('accept_member_legal',{p_version:LEGAL_VERSION});
+      if(legal.error)throw legal.error;
+      location.replace('onboarding.html');
+      return;
+    }
+
+    location.replace('legal-consent.html');
   }
 
   async function create(){
@@ -66,9 +92,10 @@
     if(!c)return show('Enter your invite code.',true);
     if(!email)return show('Enter your email.',true);
     if(password.length<8)return show('Your password needs at least 8 characters.',true);
+    if(!legalAgree.checked)return show('Please accept the Terms and Community Guidelines before creating your account.',true);
     go.disabled=true;go.textContent='Setting up…';show('');
     try{
-      var r=await client.auth.signUp({email:email,password:password,options:{emailRedirectTo:returnUrl(c)}});
+      var r=await client.auth.signUp({email:email,password:password,options:{emailRedirectTo:returnUrl(c),data:{legal_version:LEGAL_VERSION,legal_accepted_client_at:new Date().toISOString()}}});
       if(r.error)throw r.error;
       if(r.data&&r.data.session){await claim(c);return;}
       form.hidden=true;confirmBox.hidden=false;document.getElementById('confirmCode').textContent=c;

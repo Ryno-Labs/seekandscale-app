@@ -863,10 +863,6 @@ h2{
       <label for="city">City</label>
       <input id="city" placeholder="Georgetown">
     </div>
-    <div class="field">
-      <label for="brandColor">Brand color</label>
-      <input id="brandColor" placeholder="#111111">
-    </div>
   </div>
 
   <div class="field">
@@ -914,7 +910,7 @@ h2{
     <label><input type="checkbox" id="showSocials" checked> Show socials</label>
   </div>
 
-  <div id="placementSection" hidden>
+  <div id="placementSection" hidden style="display:none!important">
     <h2>Featured placement</h2>
     <div class="card flat" style="padding:14px">
       <div class="grid2">
@@ -940,7 +936,7 @@ h2{
     </div>
   </div>
 
-  <h2>Brand &amp; images</h2>
+  <h2>Images</h2>
 
   <div class="filebox">
     <label for="profilePhoto">Profile photo</label>
@@ -954,12 +950,6 @@ h2{
     <img id="logoPreview" class="preview" alt="">
   </div>
 
-  <div class="filebox">
-    <label for="businessBanner">Brand banner</label>
-    <input id="businessBanner" type="file" accept="image/jpeg,image/png,image/webp">
-    <img id="bannerPreview" class="preview" alt="">
-  </div>
-
   <div class="dfoot" style="gap:8px;flex-wrap:wrap">
     <button class="btn ghost sm" id="deleteMemberBtn" style="display:none;color:#8B1E17">Delete member</button>
     <button class="btn ghost sm" id="memberAccessBtn" style="display:none">Remove from community</button>
@@ -970,7 +960,7 @@ h2{
 
 <!-- Supabase browser library + existing browser-safe config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../assets/config.js?v=community3"></script>
+<script src="../assets/config.js?v=ux2"></script>
 
 <script>
 /* ==========================================================================
@@ -1309,7 +1299,7 @@ h2{
 
     [
       'memberId','businessId','fullName','memberEmail','headline','bio','lookingFor',
-      'businessName','trade','city','brandColor','whatTheyDo','helpsWith',
+      'businessName','trade','city','whatTheyDo','helpsWith',
       'memberPhone','businessPhone','businessEmail','website','instagram','linkedin'
     ].forEach(function(id){ $(id).value = ''; });
 
@@ -1317,9 +1307,9 @@ h2{
     $('showPhone').checked = true;
     $('showSocials').checked = true;
 
-    ['profilePhoto','businessLogo','businessBanner'].forEach(function(id){ $(id).value = ''; });
+    ['profilePhoto','businessLogo'].forEach(function(id){ $(id).value = ''; });
 
-    ['profilePreview','logoPreview','bannerPreview'].forEach(function(id){
+    ['profilePreview','logoPreview'].forEach(function(id){
       $(id).src = '';
       $(id).classList.remove('on');
     });
@@ -1371,8 +1361,7 @@ h2{
       $('businessName').value = b.name || '';
       $('trade').value = b.trade || '';
       $('city').value = b.city || '';
-      $('brandColor').value = b.brand_color || '';
-      $('whatTheyDo').value = b.what_they_do || '';
+$('whatTheyDo').value = b.what_they_do || '';
       $('helpsWith').value = b.helps_with || '';
       $('businessPhone').value = b.contact_phone || '';
       $('businessEmail').value = b.contact_email || '';
@@ -1381,9 +1370,7 @@ h2{
 
     setPreview('profilePreview',m.profile_photo_url);
     setPreview('logoPreview',b && b.logo_url);
-    setPreview('bannerPreview',b && b.banner_url);
-
-    $('editorTitle').textContent = m.full_name || 'Edit member';
+$('editorTitle').textContent = m.full_name || 'Edit member';
     $('editorEyebrow').textContent = (m.status || 'member') + ' member';
 
     $('featureKind').value = m.featured_kind || '';
@@ -1509,8 +1496,7 @@ h2{
         name: businessName,
         trade: $('trade').value.trim() || null,
         city: $('city').value.trim() || null,
-        brand_color: $('brandColor').value.trim() || '#111111',
-        what_they_do: $('whatTheyDo').value.trim() || null,
+what_they_do: $('whatTheyDo').value.trim() || null,
         helps_with: $('helpsWith').value.trim() || null,
         contact_phone: $('businessPhone').value.trim() || null,
         contact_email: $('businessEmail').value.trim() || null,
@@ -1533,19 +1519,15 @@ h2{
 
       var profileUrl = await uploadImage($('profilePhoto').files[0],memberId,'profile');
       var logoUrl = await uploadImage($('businessLogo').files[0],memberId,'logo');
-      var bannerUrl = await uploadImage($('businessBanner').files[0],memberId,'banner');
-
-      if(profileUrl){
+if(profileUrl){
         var mp = await client.from('members').update({profile_photo_url:profileUrl}).eq('id',memberId);
         if(mp.error) throw mp.error;
       }
 
-      if(businessId && (logoUrl || bannerUrl)){
+      if(businessId && logoUrl){
         var imageUpdate = {};
         if(logoUrl) imageUpdate.logo_url = logoUrl;
-        if(bannerUrl) imageUpdate.banner_url = bannerUrl;
-
-        var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId);
+var bp = await client.from('businesses').update(imageUpdate).eq('id',businessId);
         if(bp.error) throw bp.error;
       }
 
@@ -2127,9 +2109,7 @@ h2{
 
   bindPreview('profilePhoto','profilePreview');
   bindPreview('businessLogo','logoPreview');
-  bindPreview('businessBanner','bannerPreview');
-
-  boot();
+boot();
 })();
 </script>
 </body>

@@ -88,6 +88,10 @@
       $('top').innerHTML =
         '<a class="logo" href="home.html">seek<i>+</i><br>scale.</a>'+
         '<div class="top-right">'+
+          '<a class="top-notify" href="notifications.html" aria-label="Notifications">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>'+
+            '<span class="notification-badge notification-count-signal" hidden></span>'+
+          '</a>'+
           '<a class="pill" href="helpdesk.html">Get help</a>'+
           '<a class="me-av" href="me.html" aria-label="My profile">'+
             (member.profile_photo_url ? '<img src="'+escapeHtml(member.profile_photo_url)+'" alt="">' : escapeHtml(initials(member.full_name)))+
@@ -119,7 +123,9 @@
       if(side && n.id !== 'me'){
         var nav = side.querySelector('.side-nav');
         nav.insertAdjacentHTML('beforeend',
-          '<a class="snav'+(n.id===active?' on':'')+'" href="'+n.href+'">'+svg+'<span>'+n.label+'</span></a>');
+          '<a class="snav'+(n.id===active?' on':'')+'" href="'+n.href+'">'+svg+'<span>'+n.label+'</span>'+
+            (n.id==='members'?'<span class="nav-number member-count-signal" hidden></span>':'')+
+          '</a>');
       }
 
       if(tabs){
@@ -133,7 +139,10 @@
       var helpSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+helpIcon+'</svg>';
       var meSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+meIcon+'</svg>';
 
+      var notifySvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>';
+
       bottom.insertAdjacentHTML('beforeend',
+        '<a class="snav'+(active==='notifications'?' on':'')+'" href="notifications.html">'+notifySvg+'<span>Notifications</span><span class="notification-badge notification-count-signal" hidden></span></a>'+
         '<a class="snav" href="helpdesk.html">'+helpSvg+'<span>Get help</span></a>'+
         '<a class="snav'+(active==='me'?' on':'')+'" href="me.html">'+meSvg+'<span>Profile</span></a>');
     }
@@ -188,6 +197,7 @@
 
     window.SS.ctx = ctx;
     shell(active);
+    await refreshShellSignals();
     registerServiceWorker();
     return ctx;
   }
@@ -543,6 +553,280 @@
     return ({work:'Work',referral:'Referral',hiring:'Hiring',talent:'Talent available',need:'Need / request'})[value] || 'Opportunity';
   }
 
+
+  async function countActiveMembers(){
+    var r=await getClient().from('members')
+      .select('id',{count:'exact',head:true})
+      .eq('status','active')
+      .eq('onboarding_complete',true);
+    if(r.error)throw r.error;
+    return r.count || 0;
+  }
+
+  async function countUnreadNotifications(){
+    var r=await getClient().from('notifications')
+      .select('id',{count:'exact',head:true})
+      .eq('member_id',ctx.member.id)
+      .is('read_at',null);
+    if(r.error){
+      if(String(r.error.message||'').toLowerCase().indexOf('notifications')!==-1)return 0;
+      throw r.error;
+    }
+    return r.count || 0;
+  }
+
+  async function refreshShellSignals(){
+    if(!ctx)return;
+    try{
+      var values=await Promise.all([countActiveMembers(),countUnreadNotifications()]);
+      document.querySelectorAll('.member-count-signal').forEach(function(el){
+        el.textContent=values[0];
+        el.hidden=false;
+      });
+      document.querySelectorAll('.notification-count-signal').forEach(function(el){
+        el.textContent=values[1] > 99 ? '99+' : String(values[1]);
+        el.hidden=values[1]===0;
+      });
+    }catch(e){
+      // Shell counts are helpful, but they should never stop the app from loading.
+    }
+  }
+
+  async function loadMentionableMembers(){
+    var mr=await getClient().from('members')
+      .select('id,full_name,profile_photo_url,headline')
+      .eq('status','active')
+      .eq('onboarding_complete',true)
+      .order('full_name',{ascending:true});
+
+    if(mr.error)throw mr.error;
+
+    var rows=mr.data||[];
+    var maps=await getMemberMaps(rows.map(function(m){return m.id;}));
+
+    return rows.map(function(m){
+      return {
+        id:m.id,
+        full_name:m.full_name,
+        profile_photo_url:m.profile_photo_url,
+        headline:m.headline,
+        business:maps.businesses[m.id]||null
+      };
+    });
+  }
+
+  function mentionRanges(text,members){
+    var source=String(text||'');
+    var lower=source.toLowerCase();
+    var ranges=[];
+    var sorted=(members||[]).filter(function(m){return m&&m.id&&m.full_name;}).slice()
+      .sort(function(a,b){return b.full_name.length-a.full_name.length;});
+
+    function boundaryBefore(ch){
+      return !ch || /[\s(\[{"']/i.test(ch);
+    }
+    function boundaryAfter(ch){
+      return !ch || /[\s.,!?;:)\]}"']/i.test(ch);
+    }
+    function overlaps(start,end){
+      return ranges.some(function(r){return start<r.end && end>r.start;});
+    }
+
+    sorted.forEach(function(m){
+      var token='@'+String(m.full_name).trim();
+      var needle=token.toLowerCase();
+      var at=0;
+
+      while(needle.length>1 && (at=lower.indexOf(needle,at))!==-1){
+        var end=at+needle.length;
+        var before=at>0?source.charAt(at-1):'';
+        var after=end<source.length?source.charAt(end):'';
+
+        if(boundaryBefore(before)&&boundaryAfter(after)&&!overlaps(at,end)){
+          ranges.push({start:at,end:end,member:m,text:source.slice(at,end)});
+        }
+        at=end;
+      }
+    });
+
+    return ranges.sort(function(a,b){return a.start-b.start;});
+  }
+
+  function findMentionIds(text,members){
+    var seen={};
+    return mentionRanges(text,members).map(function(r){return r.member.id;})
+      .filter(function(id){
+        if(seen[id])return false;
+        seen[id]=true;
+        return true;
+      });
+  }
+
+  function renderMentions(text,members){
+    var source=String(text||'');
+    var ranges=mentionRanges(source,members);
+    if(!ranges.length)return escapeHtml(source);
+
+    var html='',cursor=0;
+    ranges.forEach(function(r){
+      html+=escapeHtml(source.slice(cursor,r.start));
+      html+='<a class="mention-link" href="shop.html?id='+encodeURIComponent(r.member.id)+'">'+escapeHtml(r.text)+'</a>';
+      cursor=r.end;
+    });
+    html+=escapeHtml(source.slice(cursor));
+    return html;
+  }
+
+  function initMentionAutocomplete(members){
+    var list=(members||[]).filter(function(m){
+      return m && m.id && m.full_name && (!ctx || m.id!==ctx.member.id);
+    });
+
+    var old=document.getElementById('mentionAutocomplete');
+    if(old)old.remove();
+
+    var menu=document.createElement('div');
+    menu.id='mentionAutocomplete';
+    menu.className='mention-menu';
+    menu.hidden=true;
+    document.body.appendChild(menu);
+
+    var target=null,atIndex=-1,currentHits=[];
+
+    function hide(){
+      menu.hidden=true;
+      menu.innerHTML='';
+      target=null;
+      atIndex=-1;
+      currentHits=[];
+    }
+
+    function position(el){
+      var r=el.getBoundingClientRect();
+      var width=Math.min(340,Math.max(240,r.width));
+      menu.style.width=width+'px';
+      menu.style.left=Math.max(8,Math.min(window.innerWidth-width-8,r.left))+'px';
+      menu.style.top=Math.min(window.innerHeight-250,r.bottom+6)+'px';
+    }
+
+    function currentQuery(el){
+      if(typeof el.selectionStart!=='number')return null;
+      var before=el.value.slice(0,el.selectionStart);
+      var at=before.lastIndexOf('@');
+      if(at<0)return null;
+      if(at>0 && !/[\s(\[{"']/.test(before.charAt(at-1)))return null;
+
+      var q=before.slice(at+1);
+      if(q.length>45 || /[\n,;:!?]/.test(q))return null;
+      return {at:at,q:q};
+    }
+
+    function show(el){
+      var info=currentQuery(el);
+      if(!info){hide();return;}
+
+      var q=norm(info.q);
+      var hits=list.filter(function(m){
+        if(!q)return true;
+        var b=m.business||{};
+        return norm(m.full_name).indexOf(q)!==-1 ||
+          norm(b.name).indexOf(q)!==-1 ||
+          norm(b.trade).indexOf(q)!==-1;
+      }).slice(0,6);
+
+      if(!hits.length){hide();return;}
+
+      target=el;
+      atIndex=info.at;
+      currentHits=hits;
+      menu.innerHTML=hits.map(function(m){
+        var b=m.business||{};
+        var line=[b.name,b.trade,b.city].filter(Boolean).join(' · ');
+        return '<button class="mention-option" type="button" data-mention-member="'+escapeHtml(m.id)+'">'+
+          avatar(m,'mention-avatar')+
+          '<span><strong>'+escapeHtml(m.full_name)+'</strong><small>'+escapeHtml(line||m.headline||'Member')+'</small></span>'+
+        '</button>';
+      }).join('');
+      position(el);
+      menu.hidden=false;
+    }
+
+    document.addEventListener('input',function(e){
+      if(e.target && e.target.matches('[data-mention-input]'))show(e.target);
+    });
+
+    document.addEventListener('click',function(e){
+      var option=e.target.closest('[data-mention-member]');
+      if(option && target){
+        var member=currentHits.filter(function(m){return m.id===option.dataset.mentionMember;})[0];
+        if(!member)return;
+
+        var caret=target.selectionStart;
+        var before=target.value.slice(0,atIndex);
+        var after=target.value.slice(caret);
+        var insert='@'+member.full_name+' ';
+        target.value=before+insert+after;
+        var next=before.length+insert.length;
+        target.focus();
+        target.setSelectionRange(next,next);
+        target.dispatchEvent(new Event('input',{bubbles:true}));
+        hide();
+        e.preventDefault();
+        return;
+      }
+
+      if(!e.target.closest('.mention-menu') && !(e.target && e.target.matches('[data-mention-input]'))){
+        hide();
+      }
+    });
+
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'&&!menu.hidden)hide();
+    });
+
+    window.addEventListener('resize',hide);
+    window.addEventListener('scroll',hide,true);
+  }
+
+  async function notifyMentions(text,postId,replyId,members){
+    var ids=findMentionIds(text,members);
+    if(!ids.length)return 0;
+
+    var r=await getClient().rpc('notify_mentions',{
+      p_member_ids:ids,
+      p_post_id:postId||null,
+      p_reply_id:replyId||null
+    });
+    if(r.error)throw r.error;
+
+    return r.data && r.data.created ? r.data.created : 0;
+  }
+
+  async function loadNotifications(limit){
+    var r=await getClient().from('notifications')
+      .select('*')
+      .eq('member_id',ctx.member.id)
+      .order('created_at',{ascending:false})
+      .limit(limit||100);
+
+    if(r.error)throw r.error;
+
+    var rows=r.data||[];
+    var maps=await getMemberMaps(rows.map(function(x){return x.actor_member_id;}));
+    rows.forEach(function(x){
+      x.actor=maps.members[x.actor_member_id]||null;
+      x.actorBusiness=maps.businesses[x.actor_member_id]||null;
+    });
+    return rows;
+  }
+
+  async function markAllNotificationsRead(){
+    var r=await getClient().rpc('mark_all_notifications_read');
+    if(r.error)throw r.error;
+    await refreshShellSignals();
+    return r.data||0;
+  }
+
   function socialHref(value){
     var v = String(value || '').trim();
     if(!v) return '';
@@ -626,6 +910,16 @@
     resolveCommunityFile:resolveCommunityFile,
     loadMemberMatches:loadMemberMatches,
     loadRecommendations:loadRecommendations,
+    countActiveMembers:countActiveMembers,
+    countUnreadNotifications:countUnreadNotifications,
+    refreshShellSignals:refreshShellSignals,
+    loadMentionableMembers:loadMentionableMembers,
+    findMentionIds:findMentionIds,
+    renderMentions:renderMentions,
+    initMentionAutocomplete:initMentionAutocomplete,
+    notifyMentions:notifyMentions,
+    loadNotifications:loadNotifications,
+    markAllNotificationsRead:markAllNotificationsRead,
     socialHref:socialHref,
     shareMember:shareMember,
     toast:toast,

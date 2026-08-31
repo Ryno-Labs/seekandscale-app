@@ -1,16 +1,16 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111111"><title>Members · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=network3"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png"></head><body>
+<link rel="stylesheet" href="assets/app.css?v=network32"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png"></head><body>
 <header class="top" id="top"></header><div class="shell"><aside class="side" id="side"></aside><main>
-<h1>Members</h1><p class="sub">Who should I call? Search trusted local owners by person, business, trade, city, or what they can help with.</p>
+<h1>Members <span class="member-count-title" id="memberCountLabel"></span></h1><p class="sub">Who should I call? Search trusted local owners by person, business, trade, city, or what they can help with.</p>
 <div id="matches"></div>
 <div class="directory-tools"><div class="searchbox"><input id="search" type="search" placeholder="Try: electrician Cedar Park, hiring help, CPA…"></div></div>
 
 <div id="members"><div class="loading">Loading members…</div></div>
 </main></div><nav class="tabs" id="tabs"></nav><a class="help-fab" href="helpdesk.html">Get help</a>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network3"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network32"></script>
 <script>(async function(){
-  try{await SS.requireMember('members');var all=await SS.loadMembers(),matches=await SS.loadMemberMatches();
+  try{await SS.requireMember('members');var data=await Promise.all([SS.loadMembers(),SS.loadMemberMatches(),SS.countActiveMembers()]),all=data[0],matches=data[1],memberCount=data[2];SS.$('memberCountLabel').textContent=memberCount+' '+(memberCount===1?'local owner':'local owners');
     function score(x,q){if(!q)return 0;var m=x.member,b=x.business||{},terms=SS.norm(q).split(' ').filter(Boolean),s=0;terms.forEach(function(t){if(SS.norm(m.full_name).indexOf(t)!==-1)s+=5;if(SS.norm(b.name).indexOf(t)!==-1)s+=4;if(SS.norm(b.trade).indexOf(t)!==-1)s+=5;if(SS.norm(b.city).indexOf(t)!==-1)s+=3;if(SS.norm(b.helps_with).indexOf(t)!==-1)s+=3;if(SS.norm(b.what_they_do).indexOf(t)!==-1)s+=2;if(SS.norm(m.looking_for).indexOf(t)!==-1)s+=1;});if(SS.ctx.business&&SS.looseMatch(b.city,SS.ctx.business.city))s+=1;return s;}
     function render(){var q=SS.$('search').value.trim();var rows=all.map(function(x){x._score=score(x,q);return x;}).filter(function(x){return !q||x._score>0;}).sort(function(a,b){return q?(b._score-a._score):a.member.full_name.localeCompare(b.member.full_name);});SS.$('members').innerHTML=rows.length?rows.map(SS.memberCard).join(''):'<div class="card"><div class="empty">No member matches that search yet. Try a trade, city, or problem.</div></div>';}
     SS.$('matches').innerHTML=matches.length?'<section class="match-strip"><h2>People you should know</h2><div class="match-cards">'+matches.filter(function(x){return x.member;}).slice(0,3).map(function(x){return '<div class="match-card">'+SS.avatar(x.member,'member-avatar')+'<div class="copy"><strong>'+SS.esc(x.member.full_name)+'</strong>'+SS.esc(SS.businessLine(x.member,x.business))+(x.reason?'<br>'+SS.esc(x.reason):'')+'</div><a class="act" href="shop.html?id='+encodeURIComponent(x.member.id)+'">View</a><button class="act" type="button" data-match-connected="'+SS.esc(x.id)+'">Connected</button></div>';}).join('')+'</div></section>':'';

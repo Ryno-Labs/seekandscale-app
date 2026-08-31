@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111"><title>Home · seek+scale.</title>
-<link rel="stylesheet" href="assets/app.css?v=network3"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="assets/app.css?v=network32"><link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><link rel="icon" href="assets/icons/favicon-32.png">
 </head><body>
 <header class="top" id="top"></header>
@@ -68,7 +68,7 @@
         <button data-share-type="win" type="button">Win</button>
         <button data-share-type="local-intel" type="button">Local intel</button>
       </div>
-      <div class="field"><label for="shareBody">What do you want to share?</label><textarea id="shareBody" maxlength="6000" placeholder="Useful beats polished."></textarea></div>
+      <div class="field"><label for="shareBody">What do you want to share?</label><textarea id="shareBody" data-mention-input maxlength="6000" placeholder="Useful beats polished."></textarea></div>
       <div class="field" id="intelCityField" hidden><label for="intelCity">City / area</label><input id="intelCity" placeholder="Georgetown"></div>
       <div class="field"><label for="shareLink">Website link <span class="dim">(optional)</span></label><input id="shareLink" placeholder="https://"></div>
       <div class="field"><label>Photo <span class="dim">(optional)</span></label><div class="attachment-row"><input id="shareImage" type="file" accept="image/jpeg,image/png,image/webp"></div><div class="file-note">One JPG, PNG or WebP · up to 8 MB</div></div>
@@ -77,7 +77,7 @@
 
     <div id="askForm" hidden>
       <button class="act" data-compose-back type="button">← Back</button>
-      <div class="field" style="margin-top:13px"><label for="askBody">What’s going on?</label><textarea id="askBody" maxlength="4000" placeholder="What are you trying to solve?"></textarea></div>
+      <div class="field" style="margin-top:13px"><label for="askBody">What’s going on?</label><textarea id="askBody" data-mention-input maxlength="4000" placeholder="What are you trying to solve?"></textarea></div>
       <div class="field"><label for="askTried">What have you tried? <span class="dim">(optional)</span></label><textarea id="askTried" maxlength="2500"></textarea></div>
       <div class="field"><label for="askResult">What would a good result look like? <span class="dim">(optional)</span></label><textarea id="askResult" maxlength="2500"></textarea></div>
       <button class="btn wide" id="publishAsk" type="button">Ask the network</button><div class="message" id="askMsg"></div>
@@ -87,7 +87,7 @@
       <button class="act" data-compose-back type="button">← Back</button>
       <div class="field" style="margin-top:13px"><label for="resourceTitle">Resource title</label><input id="resourceTitle" maxlength="180" placeholder="Technician interview scorecard"></div>
       <div class="field"><label for="resourceCategory">Category</label><select id="resourceCategory"><option>Owner</option><option>Leads</option><option>Sales</option><option>Money</option><option>Team</option><option>Systems</option><option>Marketing</option><option>Reviews</option><option>Referrals</option><option>Customer</option><option>Local</option><option>Other</option></select></div>
-      <div class="field"><label for="resourceNote">Why is this useful?</label><textarea id="resourceNote" maxlength="4000" placeholder="Give members context instead of just dropping a link."></textarea></div>
+      <div class="field"><label for="resourceNote">Why is this useful?</label><textarea id="resourceNote" data-mention-input maxlength="4000" placeholder="Give members context instead of just dropping a link."></textarea></div>
       <div class="field"><label for="resourceLink">Website link <span class="dim">(use this or a PDF)</span></label><input id="resourceLink" placeholder="https://"></div>
       <div class="field"><label for="resourceFile">PDF <span class="dim">(use this or a link)</span></label><input id="resourceFile" type="file" accept="application/pdf"><div class="file-note">PDF · up to 15 MB · available only to signed-in members</div></div>
       <button class="btn wide" id="publishResource" type="button">Share resource</button><div class="message" id="resourceMsg"></div>
@@ -112,11 +112,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network3"></script>
+<script src="assets/config.js?v=community-v1"></script><script src="assets/app.js?v=network32"></script>
 <script>
 (async function(){
   'use strict';
-  var posts=[],replies=[],opps=[],saved=new Set(),feedMode='all',shareType='update',matches=[];
+  var posts=[],replies=[],opps=[],saved=new Set(),feedMode='all',shareType='update',matches=[],mentionMembers=[];
 
   function badge(p){
     if(p.category==='question')return '<span class="post-badge yellow">Question</span>';
@@ -159,7 +159,7 @@
           '<div class="post-author-main"><div class="post-author-name">'+SS.esc(m.full_name||'Seek & Scale')+'</div><div class="post-author-line">'+SS.esc(SS.businessLine(m,b))+' · '+SS.esc(SS.fmtTime(p.created_at))+(p.context_city?' · '+SS.esc(p.context_city):'')+'</div></div>'+badge(p)+
         '</div>'+ 
         (p.category==='resource'&&p.resource_title?'<div class="resource-title">'+SS.esc(p.resource_title)+'</div>':'')+
-        (p.body?'<div class="post-copy">'+SS.esc(p.body)+'</div>':'')+
+        (p.body?'<div class="post-copy">'+SS.renderMentions(p.body,mentionMembers)+'</div>':'')+
         resourceAttachment(p)+
       '</div>'+ 
       '<div class="post-footer">'+
@@ -169,8 +169,8 @@
         '<span class="spacer"></span>'+ 
         (p.author_member_id===SS.ctx.member.id?'<button type="button" data-delete-post="'+SS.esc(p.id)+'">Delete</button>':'')+
       '</div>'+ 
-      '<div class="post-replies">'+rs.slice(-3).map(function(r){var rm=r.author||{full_name:'Member'};return '<div class="post-reply"><strong>'+SS.esc(rm.full_name||'Member')+'</strong><br>'+SS.esc(r.body)+'</div>';}).join('')+'</div>'+ 
-      '<div class="reply-compose"><input data-reply-input="'+SS.esc(p.id)+'" maxlength="2000" placeholder="Add a useful reply…"><button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button></div>'+ 
+      '<div class="post-replies">'+rs.slice(-3).map(function(r){var rm=r.author||{full_name:'Member'};return '<div class="post-reply"><strong>'+SS.esc(rm.full_name||'Member')+'</strong><br>'+SS.renderMentions(r.body,mentionMembers)+'</div>';}).join('')+'</div>'+ 
+      '<div class="reply-compose"><input data-reply-input="'+SS.esc(p.id)+'" data-mention-input maxlength="2000" placeholder="Add a useful reply…"><button class="act solid" type="button" data-reply="'+SS.esc(p.id)+'">Reply</button></div>'+ 
     '</article>';
   }
 
@@ -261,6 +261,8 @@
 
   try{
     await SS.requireMember('home');
+    mentionMembers=await SS.loadMentionableMembers();
+    SS.initMentionAutocomplete(mentionMembers);
     SS.$('composerAvatar').innerHTML=SS.avatar(SS.ctx.member);
     SS.$('openComposer').addEventListener('click',function(){openComposer();});
     document.querySelectorAll('[data-open-compose]').forEach(function(b){b.addEventListener('click',function(){openComposer(b.dataset.openCompose);});});
@@ -278,6 +280,7 @@
         var attachment=null,file=SS.$('shareImage').files&&SS.$('shareImage').files[0];if(file)attachment=await SS.uploadCommunityFile(file);
         var category=shareType==='win'?'win':'discussion';var subtype=shareType==='local-intel'?'local-intel':'share';
         var r=await SS.client.rpc('create_network_post',{p_category:category,p_subtype:subtype,p_body:body,p_resource_title:null,p_link_url:SS.cleanUrl(SS.$('shareLink').value)||null,p_attachment_path:attachment?attachment.path:null,p_attachment_name:attachment?attachment.name:null,p_attachment_kind:attachment?attachment.kind:null,p_context_city:shareType==='local-intel'?SS.$('intelCity').value:null});if(r.error)throw r.error;
+        await SS.notifyMentions(body,r.data,null,mentionMembers);
         SS.$('shareBody').value='';SS.$('shareLink').value='';SS.$('shareImage').value='';closeComposer();await refresh();
       }catch(e){SS.$('shareMsg').textContent=e.message||'Could not post.';SS.$('shareMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Post';}
     });
@@ -285,13 +288,13 @@
     SS.$('publishAsk').addEventListener('click',async function(){
       var q=SS.$('askBody').value.trim();if(q.length<3){SS.$('askMsg').textContent='Ask the question first.';SS.$('askMsg').className='message bad';return;}
       var body=q,tried=SS.$('askTried').value.trim(),result=SS.$('askResult').value.trim();if(tried)body+='\n\nWhat I’ve tried:\n'+tried;if(result)body+='\n\nA good result would be:\n'+result;
-      var btn=this;btn.disabled=true;btn.textContent='Posting…';try{var r=await SS.client.rpc('create_network_post',{p_category:'question',p_subtype:'structured-ask',p_body:body,p_resource_title:null,p_link_url:null,p_attachment_path:null,p_attachment_name:null,p_attachment_kind:null,p_context_city:null});if(r.error)throw r.error;SS.$('askBody').value='';SS.$('askTried').value='';SS.$('askResult').value='';closeComposer();await refresh();}catch(e){SS.$('askMsg').textContent=e.message;SS.$('askMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Ask the network';}
+      var btn=this;btn.disabled=true;btn.textContent='Posting…';try{var r=await SS.client.rpc('create_network_post',{p_category:'question',p_subtype:'structured-ask',p_body:body,p_resource_title:null,p_link_url:null,p_attachment_path:null,p_attachment_name:null,p_attachment_kind:null,p_context_city:null});if(r.error)throw r.error;await SS.notifyMentions(body,r.data,null,mentionMembers);SS.$('askBody').value='';SS.$('askTried').value='';SS.$('askResult').value='';closeComposer();await refresh();}catch(e){SS.$('askMsg').textContent=e.message;SS.$('askMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Ask the network';}
     });
 
     SS.$('publishResource').addEventListener('click',async function(){
       var title=SS.$('resourceTitle').value.trim(),note=SS.$('resourceNote').value.trim(),link=SS.cleanUrl(SS.$('resourceLink').value),file=SS.$('resourceFile').files&&SS.$('resourceFile').files[0];
       if(!title){SS.$('resourceMsg').textContent='Add a title.';SS.$('resourceMsg').className='message bad';return;}if(!link&&!file){SS.$('resourceMsg').textContent='Add a PDF or website link.';SS.$('resourceMsg').className='message bad';return;}
-      var btn=this;btn.disabled=true;btn.textContent='Sharing…';try{var attachment=file?await SS.uploadCommunityFile(file):null;if(attachment&&attachment.kind!=='pdf')throw new Error('Resources accept PDFs or website links.');var r=await SS.client.rpc('create_network_post',{p_category:'resource',p_subtype:SS.$('resourceCategory').value,p_body:note,p_resource_title:title,p_link_url:link||null,p_attachment_path:attachment?attachment.path:null,p_attachment_name:attachment?attachment.name:null,p_attachment_kind:attachment?attachment.kind:null,p_context_city:null});if(r.error)throw r.error;SS.$('resourceTitle').value='';SS.$('resourceNote').value='';SS.$('resourceLink').value='';SS.$('resourceFile').value='';closeComposer();await refresh();}catch(e){SS.$('resourceMsg').textContent=e.message;SS.$('resourceMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Share resource';}
+      var btn=this;btn.disabled=true;btn.textContent='Sharing…';try{var attachment=file?await SS.uploadCommunityFile(file):null;if(attachment&&attachment.kind!=='pdf')throw new Error('Resources accept PDFs or website links.');var r=await SS.client.rpc('create_network_post',{p_category:'resource',p_subtype:SS.$('resourceCategory').value,p_body:note,p_resource_title:title,p_link_url:link||null,p_attachment_path:attachment?attachment.path:null,p_attachment_name:attachment?attachment.name:null,p_attachment_kind:attachment?attachment.kind:null,p_context_city:null});if(r.error)throw r.error;await SS.notifyMentions(note,r.data,null,mentionMembers);SS.$('resourceTitle').value='';SS.$('resourceNote').value='';SS.$('resourceLink').value='';SS.$('resourceFile').value='';closeComposer();await refresh();}catch(e){SS.$('resourceMsg').textContent=e.message;SS.$('resourceMsg').className='message bad';}finally{btn.disabled=false;btn.textContent='Share resource';}
     });
 
     SS.$('feedFilter').addEventListener('click',function(e){var b=e.target.closest('[data-feed]');if(!b)return;feedMode=b.dataset.feed;SS.$('feedFilter').querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});renderFeed();});
@@ -301,7 +304,7 @@
     document.addEventListener('click',async function(e){
       var save=e.target.closest('[data-save-item]');if(save){var type=save.dataset.saveItem,id=save.dataset.saveId;save.disabled=true;try{var yes=await SS.toggleSave(type,id);if(yes)saved.add(type+':'+id);else saved.delete(type+':'+id);save.textContent=yes?'Saved':'Save';save.classList.toggle('saved-on',yes);}catch(err){SS.toast(err.message);}finally{save.disabled=false;}return;}
       var claim=e.target.closest('[data-claim-opportunity]');if(claim){claim.disabled=true;try{var c=await SS.client.rpc('claim_opportunity',{p_opportunity_id:claim.dataset.claimOpportunity});if(c.error)throw c.error;SS.toast('Claimed. Open the opportunity to contact the poster.');await refresh();}catch(err){SS.toast(err.message);claim.disabled=false;}return;}
-      var reply=e.target.closest('[data-reply]');if(reply){var id=reply.dataset.reply,input=document.querySelector('[data-reply-input="'+CSS.escape(id)+'"]'),text=input&&input.value.trim();if(!text)return;reply.disabled=true;var rr=await SS.client.from('post_replies').insert({post_id:id,author_member_id:SS.ctx.member.id,body:text});if(rr.error){SS.toast(rr.error.message);reply.disabled=false;return;}await refresh();return;}
+      var reply=e.target.closest('[data-reply]');if(reply){var id=reply.dataset.reply,input=document.querySelector('[data-reply-input="'+CSS.escape(id)+'"]'),text=input&&input.value.trim();if(!text)return;reply.disabled=true;var rr=await SS.client.from('post_replies').insert({post_id:id,author_member_id:SS.ctx.member.id,body:text}).select('id').single();if(rr.error){SS.toast(rr.error.message);reply.disabled=false;return;}try{await SS.notifyMentions(text,null,rr.data.id,mentionMembers);}catch(err){SS.toast('Reply posted, but the mention alert could not be created.');}await refresh();return;}
       var focus=e.target.closest('[data-focus-reply]');if(focus){var input=document.querySelector('[data-reply-input="'+CSS.escape(focus.dataset.focusReply)+'"]');if(input)input.focus();return;}
       var share=e.target.closest('[data-share-post]');if(share){var url=location.origin+location.pathname+'#post-'+share.dataset.sharePost;try{if(navigator.share)await navigator.share({title:'Seek & Scale',url:url});else{await navigator.clipboard.writeText(url);SS.toast('Post link copied.');}}catch(err){}return;}
       var connected=e.target.closest('[data-match-connected]');if(connected){connected.disabled=true;var mc=await SS.client.rpc('set_my_match_status',{p_id:connected.dataset.matchConnected,p_status:'connected'});if(mc.error)SS.toast(mc.error.message);else{SS.toast('Connection recorded.');await refresh();}return;}
